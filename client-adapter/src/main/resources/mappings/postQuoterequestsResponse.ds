@@ -1,0 +1,11 @@
+local res = payload.result;
+local billDetails = payload.result.billDetails;
+
+{
+  "quoteId": res.channelReferenceId,
+  "transactionId": payload.transactionId,
+  "transferAmount": billDetails.dueDetails.dueAmount,
+  "transferAmountCurrency": payload.currency,
+  "payeeFspFeeAmount": "0.0",
+  "payeeFspFeeAmountCurrency": payload.currency
+}

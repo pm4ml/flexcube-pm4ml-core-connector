@@ -1,0 +1,5 @@
+{
+  "accountNumber": payload.to.idValue,
+  "accountType": "loan",
+  "channelReferenceId": payload.quoteId
+}

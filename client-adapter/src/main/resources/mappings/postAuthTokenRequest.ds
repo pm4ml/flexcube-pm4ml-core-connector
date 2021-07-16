@@ -1,0 +1,8 @@
+{
+    "client_id": exchangeProperty.clientId,
+    "grant_type": exchangeProperty.grantType,
+    "scope": exchangeProperty.scope,
+    "username": std.strReplace(exchangeProperty.username, '\\', ''),
+    "password": std.strReplace(exchangeProperty.password, '\\', ''),
+    "isPasswordEncrypted": exchangeProperty.isPasswordEncrypted
+}

@@ -1,0 +1,15 @@
+local quote = payload.quoteRequest.body;
+local accNumber = quote.payee.partyIdInfo.partyIdentifier;
+local transfer = payload.prepare.body;
+
+{
+    "channelReferenceId": quote.quoteId,
+    "loanAccountNumber": std.substr(accNumber, 3, std.length(accNumber)),
+    "channelPaymentDetails": {
+        "paymentTransactionId": payload.transferId,
+        "transactionAmount": transfer.amount.amount,
+        "transactionStatus": "SUCCESS",
+        "transactionDate": DS.ZonedDateTime.now(),
+        "transactionRemarks": quote.note
+    }
+}

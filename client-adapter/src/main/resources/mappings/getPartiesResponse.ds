@@ -1,0 +1,8 @@
+local customerDetails = payload.result.customerDetails;
+
+{
+  idType: header.idType,
+  idValue: header.idValue,
+  first: std.splitLimit(customerDetails.name," ", 1)[0],
+  last: std.splitLimit(customerDetails.name," ", 1)[1],
+}

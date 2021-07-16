@@ -1,0 +1,9 @@
+{
+  "quoteId": payload.quoteId,
+  "transactionId": payload.transactionId,
+  "transferAmount": payload.amount,
+  "transferAmountCurrency": payload.currency,
+  "payeeFspFeeAmount": "0",
+  "payeeFspFeeAmountCurrency": payload.currency,
+
+}

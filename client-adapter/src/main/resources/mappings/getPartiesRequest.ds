@@ -1,0 +1,7 @@
+local accNumber = std.substr(header.idValue, 3, std.length(header.idValue));
+
+{
+    "accountType": "loan",
+    "accountNumber": if header.idType == "ACCOUNT_ID" then accNumber else header.idValue,
+    "channelReferenceId": exchangeProperty.uuid
+}
