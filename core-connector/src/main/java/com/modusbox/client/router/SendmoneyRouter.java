@@ -27,12 +27,12 @@ public class SendmoneyRouter extends RouteBuilder {
                         "'info', " +
                         "${header.X-CorrelationId}, " +
                         "'Calling the Mojaloop Connector Outbound API, " +
-                        "POST {{mlConnector.outbound.host}}', " +
+                        "POST {{ml-conn.outbound.host}}', " +
                         "null, " +
                         "null, " +
-                        "'Request to POST {{mlConnector.outbound.host}}/transfers, IN Payload: ${body} IN Headers: ${headers}')")
+                        "'Request to POST {{ml-conn.outbound.host}}/transfers, IN Payload: ${body} IN Headers: ${headers}')")
                 //.marshal().json(JsonLibrary.Gson)
-                //.toD("{{mlConnector.outbound.host}}/transfers?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                //.toD("{{ml-conn.outbound.host}}/transfers?bridgeEndpoint=true&throwExceptionOnFailure=false")
                 //.unmarshal().json(JsonLibrary.Gson)
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
@@ -40,7 +40,7 @@ public class SendmoneyRouter extends RouteBuilder {
                         "'Called the Mojaloop Connector', " +
                         "null, " +
                         "null, " +
-                        "'Response from POST {{mlConnector.outbound.host}}/transfers, OUT Payload: ${body}')")
+                        "'Response from POST {{ml-conn.outbound.host}}/transfers, OUT Payload: ${body}')")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -64,9 +64,9 @@ public class SendmoneyRouter extends RouteBuilder {
                 .to("bean:customJsonMessage?method=logJsonMessage('info', ${header.X-CorrelationId}, " +
                         "'Calling Mojaloop Connector Outbound API', " +
                         "'Tracking the request', 'Track the response', " +
-                        "'Request sent to PUT {{mlConnector.outbound.host}}/transfers/${header.transferId}')")
+                        "'Request sent to PUT {{ml-conn.outbound.host}}/transfers/${header.transferId}')")
                 //.marshal().json(JsonLibrary.Gson)
-                //.toD("{{mlConnector.outbound.host}}/transfers/${header.transferId}?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                //.toD("{{ml-conn.outbound.host}}/transfers/${header.transferId}?bridgeEndpoint=true&throwExceptionOnFailure=false")
                 //.unmarshal().json(JsonLibrary.Gson)
                 .to("bean:customJsonMessage?method=logJsonMessage('info', ${header.X-CorrelationId}, " +
                         "'Response from Mojaloop Connector Outbound API: ${body}', " +

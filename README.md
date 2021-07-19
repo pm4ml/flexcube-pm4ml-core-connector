@@ -9,16 +9,16 @@ Additional or different topics specified below.
 To run the Finflux Core Connector and specify the proper credentials for CBS API connection:
 ```
 java \
--DmlConnector.outbound.host="http://localhost:4001" \
+-Dml-conn.outbound.host="http://localhost:4001" \
 -Dcbs.host="https://cbs/api" \
 -Dcbs.username="user" \
 -Dcbs.password="pass" \
--Dcbs.clientId="id" \
--Dcbs.clientSecret="secret" \
--Dcbs.grantType="type" \
 -Dcbs.scope="scope" \
--Dcbs.isPasswordEncrypted="false" \
--Dcbs.tenantId="id" \
+-Dcbs.client-id="id" \
+-Dcbs.client-secret="secret" \
+-Dcbs.grant-type="type" \
+-Dcbs.is-password-encrypted="false" \
+-Dcbs.tenant-id="id" \
 -jar ./client-adapter/target/client-adapter.jar
 ```
 ```

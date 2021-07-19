@@ -9,8 +9,8 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>client-adapter-interface</artifactId>
-    <name>Finflux client adapter :: Interface</name>
+    <artifactId>core-connector-interface</artifactId>
+    <name>Finflux Core Connector :: Interface</name>
     <description>
         Interface Definitions for the Finflux scheme adapter API.
         Contains model objects and java interfaces, with no logic and minimal external dependencies.

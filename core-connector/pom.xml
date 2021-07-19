@@ -10,8 +10,8 @@
         <version>1.2.0</version>
     </parent>
 
-    <artifactId>client-adapter</artifactId>
-    <name>Finflux client adapter :: Main</name>
+    <artifactId>core-connector</artifactId>
+    <name>Finflux Core Connector :: Main</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,7 +23,7 @@
 
         <dependency>
             <groupId>com.modusbox</groupId>
-            <artifactId>client-adapter-interface</artifactId>
+            <artifactId>core-connector-interface</artifactId>
         </dependency>
 
         <dependency>

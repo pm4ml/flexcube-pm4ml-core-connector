@@ -14,7 +14,7 @@
     <artifactId>finflux-core-connector</artifactId>
     <packaging>pom</packaging>
     <version>1.2.0</version>
-    <name>Finflux client adapter :: Parent</name>
+    <name>Finflux Core Connector :: Parent</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -36,9 +36,8 @@
     </properties>
 
     <modules>
-        <module>client-adapter</module>
-        <module>client-adapter-interface</module>
-        <!--        <module>client-adapter-soap-mock</module>-->
+        <module>core-connector</module>
+        <module>core-connector-interface</module>
     </modules>
 
     <dependencyManagement>
@@ -46,12 +45,12 @@
             <!-- INTERNAL PROJECT DEPENDENCIES -->
             <dependency>
                 <groupId>com.modusbox</groupId>
-                <artifactId>client-adapter</artifactId>
+                <artifactId>core-connector</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.modusbox</groupId>
-                <artifactId>client-adapter-interface</artifactId>
+                <artifactId>core-connector-interface</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -237,7 +236,7 @@
         <profile>
             <id>docker-it</id>
             <modules>
-                <module>client-adapter-it</module>
+                <module>core-connector-it</module>
             </modules>
             <activation>
                 <activeByDefault>false</activeByDefault>
