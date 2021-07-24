@@ -60,15 +60,15 @@ public class TransfersRouter extends RouteBuilder {
                         "'Calling the " + PATH_NAME_PUT + "', " +
                         "null, " +
                         "null, " +
-                        "'Request to POST {{cbs.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
-                .to("{{cbs.host}}" + PATH)
+                        "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
+                .to("{{dfsp.host}}" + PATH)
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
                         "'Called " + PATH_NAME_PUT + "', " +
                         "null, " +
                         "null, " +
-                        "'Response from POST {{cbs.host}}" + PATH + ", OUT Payload: ${body}')")
+                        "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
                 .process(new BodyChecker())
                 //.bean("putTransfersResponse")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +

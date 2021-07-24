@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.modusbox</groupId>
-    <artifactId>finflux-core-connector</artifactId>
+    <artifactId>finflux-pm4ml-core-connector</artifactId>
     <packaging>pom</packaging>
     <version>1.2.0</version>
     <name>Finflux Core Connector :: Parent</name>

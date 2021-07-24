@@ -15,14 +15,14 @@ public class AuthRouter extends RouteBuilder {
 
         from("direct:getAuthHeader")
                 .setProperty("downstreamRequestBody", simple("${body}"))
-                .setProperty("username", simple("{{cbs.username}}"))
-                .setProperty("password", simple("{{cbs.password}}"))
-                .setProperty("scope", simple("{{cbs.scope}}"))
-                .setProperty("clientId", simple("{{cbs.client-id}}"))
-                .setProperty("grantType", simple("{{cbs.grant-type}}"))
-                .setProperty("isPasswordEncrypted", simple("{{cbs.is-password-encrypted}}"))
+                .setProperty("username", simple("{{dfsp.username}}"))
+                .setProperty("password", simple("{{dfsp.password}}"))
+                .setProperty("scope", simple("{{dfsp.scope}}"))
+                .setProperty("clientId", simple("{{dfsp.client-id}}"))
+                .setProperty("grantType", simple("{{dfsp.grant-type}}"))
+                .setProperty("isPasswordEncrypted", simple("{{dfsp.is-password-encrypted}}"))
                 .removeHeaders("Camel*")
-                .setHeader("Fineract-Platform-TenantId", simple("{{cbs.tenant-id}}"))
+                .setHeader("Fineract-Platform-TenantId", simple("{{dfsp.tenant-id}}"))
                 .setHeader("Content-Type", constant("application/json"))
                 .setHeader(Exchange.HTTP_METHOD, constant("POST"))
                 .setBody(constant(null))
@@ -33,15 +33,15 @@ public class AuthRouter extends RouteBuilder {
                         "'Calling the " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
-                        "'Request to POST {{cbs.host}}" + PATH + ", IN Payload: ${body}')")
-                .to("{{cbs.host}}" + PATH)
+                        "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body}')")
+                .to("{{dfsp.host}}" + PATH)
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
                         "'Called " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
-                        "'Response from POST {{cbs.host}}" + PATH + ", OUT Payload: ${body}')")
+                        "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
                 .unmarshal().json(JsonLibrary.Gson)
                 .setHeader("Authorization", simple("Bearer ${body['access_token']}"))
                 .to("bean:customJsonMessage?method=logJsonMessage(" +

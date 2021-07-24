@@ -39,15 +39,15 @@ public class PartiesRouter extends RouteBuilder {
                         "'Calling the " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
-                        "'Request to POST {{cbs.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
-                .to("{{cbs.host}}" + PATH)
+                        "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
+                .to("{{dfsp.host}}" + PATH)
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
                         "'Called " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
-                        "'Response from POST {{cbs.host}}" + PATH + ", OUT Payload: ${body}')")
+                        "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
                 .process(new BodyChecker())
                 .bean("getPartiesResponse")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
