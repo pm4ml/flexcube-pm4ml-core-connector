@@ -1,7 +1,7 @@
 # finflux-pm4ml-core-connector
 
 Most of the content details and instructions about development and deployment can be found into 
-the main [template project](https://github.com/pm4ml/pm4ml-core-connector-rest-template). 
+the main [template project](https://github.com/pm4ml/template-rest-pm4ml-core-connector). 
 Additional or different topics specified below.
 
 ### Overwrite application properties
@@ -34,6 +34,6 @@ docker run --rm \
 -e DFSP_AUTH_SCOPE="scope" \
 -e DFSP_AUTH_ENCRYPTED_PASS="false" \
 -e DFSP_AUTH_TENANT_ID="id" \
--p 3003:3003 finflux-cc:latest
+-p 3003:3003 core-connector:latest
 ```
 **NOTE:** keep the values in double quotes (") and scape any special character (\\@).

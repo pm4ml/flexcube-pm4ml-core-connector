@@ -189,6 +189,33 @@
             <version>20190722</version>
         </dependency>
 
+        <!-- Prometheus -->
+        <!-- The client -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+        <!-- Hotspot JVM metrics-->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_hotspot</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+        <!-- Exposition HTTPServer-->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_httpserver</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+        <!-- Pushgateway exposition-->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_pushgateway</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+        <!-- Prometheus -->
+
     </dependencies>
 
     <build>
@@ -214,7 +241,7 @@
                 <version>${camel.version}</version>
                 <configuration>
                     <!-- <specificationUri>${project.basedir}/src/spec/api.yaml</specificationUri> -->
-                    <className>ClientAdapterAPI</className>
+                    <className>CoreConnectorAPI</className>
                     <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
                     <packageName>com.modusbox.client.router</packageName>
                     <modelOutput>${project.basedir}</modelOutput>
