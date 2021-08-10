@@ -8,6 +8,7 @@ public class ExceptionHandlingRouter {
     private ErrorHandler errorProcessor = new ErrorHandler();
 
     public ExceptionHandlingRouter(RouteBuilder routeBuilder) {
+        System.out.println("Entered error handling");
         routeBuilder
                 .onException(Exception.class)
                 .handled(true)

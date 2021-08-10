@@ -1,6 +1,7 @@
 package com.modusbox.client.router;
 
 import com.modusbox.client.processor.BodyChecker;
+import com.modusbox.client.processor.PadLoanAccount;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 public class PartiesRouter extends RouteBuilder {
 
+    private final PadLoanAccount padLoanAccount = new PadLoanAccount();
     private static final String TIMER_NAME = "histogram_get_parties_timer";
 
     public static final Counter reqCounter = Counter.build()
@@ -44,6 +46,7 @@ public class PartiesRouter extends RouteBuilder {
                 /*
                  * BEGIN processing
                  */
+                .process(padLoanAccount)
                 .to("direct:getAuthHeader")
                 .process(exchange -> exchange.setProperty("uuid", UUID.randomUUID().toString()))
                 .removeHeaders("Camel*")
@@ -68,6 +71,7 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
                 .process(new BodyChecker())
+                .setProperty("mfiName", constant("{{dfsp.name}}"))
                 .bean("getPartiesResponse")
                 /*
                  * END processing
@@ -81,8 +85,8 @@ public class PartiesRouter extends RouteBuilder {
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
                 .doFinally().process(exchange -> {
-                    ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
-                }).end()
+            ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
+        }).end()
         ;
     }
 }
