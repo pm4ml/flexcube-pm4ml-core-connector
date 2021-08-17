@@ -1,5 +1,6 @@
 package com.modusbox.client.router;
 
+import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -19,9 +20,12 @@ public class HealthRouter extends RouteBuilder {
 		.help("Request latency in seconds for GET /health.")
 		.register();
 
+	private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
+
     public void configure() {
 
-		new ExceptionHandlingRouter(this);
+		exceptionHandlingConfigurer.configureExceptionHandling(this);
+		//new ExceptionHandlingRouter(this);
 
         from("direct:getHealth").routeId("com.modusbox.getHealth").doTry()
 			.process(exchange -> {

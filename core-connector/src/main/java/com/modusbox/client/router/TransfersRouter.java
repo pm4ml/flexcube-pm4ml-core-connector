@@ -1,5 +1,6 @@
 package com.modusbox.client.router;
 
+import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import com.modusbox.client.processor.BodyChecker;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
@@ -38,9 +39,12 @@ public class TransfersRouter extends RouteBuilder {
     private final String PATH_NAME_PUT = "Finflux Bill Payment Direct Process API";
     private final String PATH = "/v1/paymentgateway/billerpayments/process-direct?paymentType=Mojaloop";
 
+    private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
+
     public void configure() {
 
-        new ExceptionHandlingRouter(this);
+        exceptionHandlingConfigurer.configureExceptionHandling(this);
+        //new ExceptionHandlingRouter(this);
 
         from("direct:postTransfers").routeId("com.modusbox.postTransfers").doTry()
                 .process(exchange -> {

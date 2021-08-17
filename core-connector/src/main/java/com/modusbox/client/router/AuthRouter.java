@@ -1,5 +1,6 @@
 package com.modusbox.client.router;
 
+import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
@@ -9,9 +10,12 @@ public class AuthRouter extends RouteBuilder {
     private final String PATH_NAME = "Finflux Fetch Access Token API";
     private final String PATH = "/oauth/token";
 
+    private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
+
     public void configure() {
 
-        new ExceptionHandlingRouter(this);
+        exceptionHandlingConfigurer.configureExceptionHandling(this);
+        //new ExceptionHandlingRouter(this);
 
         from("direct:getAuthHeader")
                 .setProperty("downstreamRequestBody", simple("${body}"))

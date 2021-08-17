@@ -1,5 +1,6 @@
 package com.modusbox.client.router;
 
+import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -10,6 +11,8 @@ public class SendmoneyRouter extends RouteBuilder {
 
     private static final String TIMER_NAME_POST = "histogram_post_sendmoney_timer";
     private static final String TIMER_NAME_PUT = "histogram_put_sendmoney_by_id_timer";
+
+    private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
 
     public static final Counter reqCounterPost = Counter.build()
             .name("counter_post_sendmoney_requests_total")
@@ -33,7 +36,8 @@ public class SendmoneyRouter extends RouteBuilder {
 
     public void configure() {
 
-        new ExceptionHandlingRouter(this);
+        exceptionHandlingConfigurer.configureExceptionHandling(this);
+        //new ExceptionHandlingRouter(this);
 
         from("direct:postSendmoney").routeId("com.modusbox.postSendmoney").doTry()
                 .process(exchange -> {

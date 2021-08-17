@@ -1,7 +1,10 @@
 package com.modusbox.client.router;
 
+import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import com.modusbox.client.processor.BodyChecker;
 import com.modusbox.client.processor.PadLoanAccount;
+import com.modusbox.client.validator.AccountNumberFormatValidator;
+import com.modusbox.client.validator.GetPartyResponseValidator;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -12,6 +15,8 @@ import java.util.UUID;
 public class PartiesRouter extends RouteBuilder {
 
     private final PadLoanAccount padLoanAccount = new PadLoanAccount();
+    private final GetPartyResponseValidator getPartyResponseValidator = new GetPartyResponseValidator();
+    private final AccountNumberFormatValidator accountNumberFormatValidator = new AccountNumberFormatValidator();
     private static final String TIMER_NAME = "histogram_get_parties_timer";
 
     public static final Counter reqCounter = Counter.build()
@@ -27,9 +32,12 @@ public class PartiesRouter extends RouteBuilder {
     private final String PATH_NAME = "Finflux Advance Fetch Due API";
     private final String PATH = "/v1/paymentgateway/billerpayments/advance-fetch";
 
+    private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
+
     public void configure() {
 
-        new ExceptionHandlingRouter(this);
+        exceptionHandlingConfigurer.configureExceptionHandling(this);
+        //new ExceptionHandlingRouter(this);
 
         from("direct:getParties").routeId("com.modusbox.getParties").doTry()
                 .process(exchange -> {
@@ -46,6 +54,7 @@ public class PartiesRouter extends RouteBuilder {
                 /*
                  * BEGIN processing
                  */
+                .process(accountNumberFormatValidator)
                 .process(padLoanAccount)
                 .to("direct:getAuthHeader")
                 .process(exchange -> exchange.setProperty("uuid", UUID.randomUUID().toString()))
@@ -70,7 +79,7 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
-                .process(new BodyChecker())
+                .process(getPartyResponseValidator)
                 .setProperty("mfiName", constant("{{dfsp.name}}"))
                 .bean("getPartiesResponse")
                 /*
