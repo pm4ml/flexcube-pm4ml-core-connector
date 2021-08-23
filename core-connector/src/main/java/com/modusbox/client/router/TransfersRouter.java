@@ -82,6 +82,7 @@ public class TransfersRouter extends RouteBuilder {
         ;
 
         from("direct:putTransfers").routeId("com.modusbox.putTransfers").doTry()
+                .log("PAT: entered here")
                 .process(exchange -> {
                     reqCounterPut.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME_PUT, reqLatencyPut.startTimer()); // initiate Prometheus Histogram metric
