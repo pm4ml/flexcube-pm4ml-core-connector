@@ -38,6 +38,7 @@ public class TransfersRouter extends RouteBuilder {
 
     private final String PATH_NAME_PUT = "Finflux Bill Payment Direct Process API";
     private final String PATH = "/v1/paymentgateway/billerpayments/process-direct?paymentType=Mojaloop";
+    private final String PATH2 = "/v1/paymentgateway/billerpayments/process-direct?paymentType=";
 
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
 
@@ -63,8 +64,8 @@ public class TransfersRouter extends RouteBuilder {
                  * BEGIN processing
                  */
                 .removeHeaders("Camel*")
-                .marshal().json(JsonLibrary.Gson)
-                .bean("postTransfersResponse")
+                //.marshal().json(JsonLibrary.Gson)
+                //.bean("postTransfersResponse")
                 /*
                  * END processing
                  */
@@ -75,14 +76,14 @@ public class TransfersRouter extends RouteBuilder {
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
+                .setBody(constant(null))
                 .removeHeaders("*", "X-*")
                 .doFinally().process(exchange -> {
-                    ((Histogram.Timer) exchange.getProperty(TIMER_NAME_POST)).observeDuration(); // stop Prometheus Histogram metric
-                }).end()
+            ((Histogram.Timer) exchange.getProperty(TIMER_NAME_POST)).observeDuration(); // stop Prometheus Histogram metric
+        }).end()
         ;
 
         from("direct:putTransfers").routeId("com.modusbox.putTransfers").doTry()
-                .log("PAT: entered here")
                 .process(exchange -> {
                     reqCounterPut.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME_PUT, reqLatencyPut.startTimer()); // initiate Prometheus Histogram metric
@@ -94,6 +95,7 @@ public class TransfersRouter extends RouteBuilder {
                         "'Tracking the request', " +
                         "'Call the " + PATH_NAME_PUT + ",  Track the response', " +
                         "'Input Payload: ${body}')") // default logger
+
                 /*
                  * BEGIN processing
                  */
@@ -102,7 +104,11 @@ public class TransfersRouter extends RouteBuilder {
                 .setHeader("Fineract-Platform-TenantId", constant("{{dfsp.tenant-id}}"))
                 .setHeader("Content-Type", constant("application/json"))
                 .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-                .bean("putTransfersRequest")
+                .transform(datasonnet("resource:classpath:mappings/putTransfersRequest.ds"))
+                //.bean("putTransfersRequest")
+  //              .log("Pat Test Start")
+ //               .log("Body: "+ "${body}")
+ //               .setProperty("fspId", simple("${body.fspId}"))
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -110,7 +116,12 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
-                .to("{{dfsp.host}}" + PATH)
+
+                //.setProperty("fspId", simple("${body.fspId}"))
+//                .log("Test: " + "${exchangeProperty.fspId}")
+//                .log("Pat Rest Finish")
+                //.toD("{{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}")
+                .toD("{{dfsp.host}}" + PATH)
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -118,7 +129,9 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
-                .process(new BodyChecker())
+                //.process(new BodyChecker())
+                //.marshal().json(JsonLibrary.Gson)
+                .transform(datasonnet("resource:classpath:mappings/putTransfersResponse.ds"))
                 //.bean("putTransfersResponse")
                 /*
                  * END processing
@@ -131,10 +144,10 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "'Output Payload: empty')") // default logger
                 .removeHeaders("*", "X-*")
-                .setBody(constant(null))
+                //.setBody(constant(null))
                 .doFinally().process(exchange -> {
-                    ((Histogram.Timer) exchange.getProperty(TIMER_NAME_PUT)).observeDuration(); // stop Prometheus Histogram metric
-                }).end()
+            ((Histogram.Timer) exchange.getProperty(TIMER_NAME_PUT)).observeDuration(); // stop Prometheus Histogram metric
+        }).end()
         ;
 
     }

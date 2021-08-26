@@ -5,6 +5,7 @@ local transfer = payload.prepare.body;
 {
     "channelReferenceId": quote.quoteId,
     "loanAccountNumber": std.substr(accNumber, 3, std.length(accNumber)),
+    "fspId": quote.payer.partyIdInfo.fspId,
     "channelPaymentDetails": {
         "paymentTransactionId": payload.transferId,
         "transactionAmount": transfer.amount.amount,

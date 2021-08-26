@@ -1,6 +1,7 @@
 package com.modusbox.client.processor;
 
 import com.modusbox.client.customexception.CCCustomException;
+import com.modusbox.client.customexception.CloseWrittenOffAccountException;
 import com.modusbox.log4j2.message.CustomJsonMessage;
 import com.modusbox.log4j2.message.CustomJsonMessageImpl;
 import org.apache.camel.Exchange;
@@ -59,6 +60,13 @@ public class CustomErrorProcessor implements Processor {
                     reasonText = "{ \"statusCode\": \"" + statusCode + "\"," +
                             "\"message\": \"" + errorDescription + "\"} ";
                 }
+            } else if(exception instanceof CloseWrittenOffAccountException) {
+                httpResponseCode = 200;
+                reasonText = "{\"idType\": \"" + (String) exchange.getIn().getHeader("idType") +
+                        "\",\"idValue\": \"" + (String) exchange.getIn().getHeader("idValue") +
+                        "\",\"extensionList\": [{\"key\": \"message\",\"value\": \"" + exception.getMessage() +
+                        "\"}]}";
+
             }
                 customJsonMessage.logJsonMessage("error", String.valueOf(exchange.getIn().getHeader("X-CorrelationId")),
                     "Processing the exception at CustomErrorProcessor", null, null,

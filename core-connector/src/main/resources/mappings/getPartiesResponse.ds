@@ -1,14 +1,15 @@
 local customerDetails = payload.result.customerDetails;
 local billDetails = payload.result.billDetails;
+
 {
-  idType: header.idType,
-  idValue: header.idValue,
-  first: std.splitLimit(customerDetails.name," ", 1)[0],
-  last: std.splitLimit(customerDetails.name," ", 1)[1],
+  idType: cml.header("idType"),
+  idValue: cml.header("idValue"),
+  firstName: std.splitLimit(customerDetails.name," ", 1)[0],
+  lastName: std.splitLimit(customerDetails.name," ", 1)[1],
   extensionList: [
     {
         key: "mfiName",
-        value: exchangeProperty.mfiName
+        value: cml.exchangeProperty("mfiName")
     },
     {
         key: "amountDue",

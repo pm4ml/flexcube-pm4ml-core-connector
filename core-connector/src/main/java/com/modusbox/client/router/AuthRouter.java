@@ -29,8 +29,12 @@ public class AuthRouter extends RouteBuilder {
                 .setHeader("Fineract-Platform-TenantId", simple("{{dfsp.tenant-id}}"))
                 .setHeader("Content-Type", constant("application/json"))
                 .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-                .setBody(constant(null))
-                .bean("postAuthTokenRequest")
+                .setBody(constant(""))
+                .marshal().json()
+                .transform(datasonnet("resource:classpath:mappings/postAuthTokenRequest.ds"))
+                .setBody(simple("${body.content}"))
+                .marshal().json()
+                //.bean("postAuthTokenRequest")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -38,7 +42,9 @@ public class AuthRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body}')")
-                .to("{{dfsp.host}}" + PATH)
+                .toD("{{dfsp.host}}" + PATH)
+                .unmarshal().json()
+
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -46,7 +52,7 @@ public class AuthRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
-                .unmarshal().json(JsonLibrary.Gson)
+                //.unmarshal().json(JsonLibrary.Gson)
                 .setHeader("Authorization", simple("Bearer ${body['access_token']}"))
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +

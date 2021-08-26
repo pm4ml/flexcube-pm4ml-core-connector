@@ -1,5 +1,6 @@
 package com.modusbox.client.router;
 
+import com.modusbox.client.exception.CamelErrorProcessor;
 import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import org.apache.camel.builder.RouteBuilder;
 
@@ -18,8 +19,18 @@ public final class CoreConnectorAPI extends RouteBuilder {
 
     public void configure() {
 
-        exceptionHandlingConfigurer.configureExceptionHandling(this);
+        CamelErrorProcessor errorProcessor = new CamelErrorProcessor();
         //new ExceptionHandlingRouter(this);
+        onException(Exception.class)
+                //.logContinued(true).logRetryAttempted(true).logExhausted(true).logStackTrace(true)
+                //.retryAttemptedLogLevel(LoggingLevel.INFO).retriesExhaustedLogLevel(LoggingLevel.INFO)
+                //.maximumRedeliveries(3).redeliveryDelay(250).backOffMultiplier(2).useExponentialBackOff()
+
+                .handled(true)
+                .log("-- processing error")
+                .process(errorProcessor)
+                .log("-- error processing complete")
+        ;
 
         from("cxfrs:bean:api-rs-server?bindingStyle=SimpleConsumer")
                 .to("bean-validator://x")

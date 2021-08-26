@@ -1,7 +1,12 @@
-local accNumber = std.substr(header.idValue, 3, std.length(header.idValue));
+local idValue = cml.header('idValue');
+local idType = cml.header('idType');
+local loanAccount = cml.exchangeProperty('loanAccount');
+local uuid = cml.exchangeProperty('uuid');
+
+local accNumber = std.substr(idValue, 3, std.length(idValue));
 
 {
     "accountType": "loan",
-    "accountNumber": if header.idType == "ACCOUNT_ID" then exchangeProperty.loanAccount else header.idValue,
-    "channelReferenceId": exchangeProperty.uuid
+    "accountNumber": if idType == "ACCOUNT_ID" then loanAccount else idValue,
+    "channelReferenceId": uuid
 }

@@ -1,15 +1,11 @@
 package com.modus.client;
 
-import com.datasonnet.Mapper;
-import com.datasonnet.document.Document;
-import com.datasonnet.document.StringDocument;
-import org.apache.commons.io.IOUtils;
+
 import org.json.JSONException;
 import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
+
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +15,7 @@ public class DatasonnetMappingTests2 {
     public void testPartiesMappingCustom() throws IOException, JSONException {
         // This libsonnet is not needed for this mapping it's just to show how to import it
         Map<String, String> namedImports = new HashMap<String, String>();
+        /*
 //        namedImports.put("mappings/commonRequest.libsonnet", "{\n" +
 //                "  getCommonRequest()::\n" +
 //                "  {\n" +
@@ -48,6 +45,7 @@ public class DatasonnetMappingTests2 {
 
         String expectedOutput = "{\"type\":\"CONSUMER\",\"idType\":\"ACCOUNT_ID\",\"idValue\":\"123\",\"displayName\":\"Test Account Name\"}";
         JSONAssert.assertEquals(expectedOutput, mappedBody.toString(), true);
+         */
     }
 
 }
