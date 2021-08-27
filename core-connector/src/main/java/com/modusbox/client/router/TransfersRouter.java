@@ -104,24 +104,40 @@ public class TransfersRouter extends RouteBuilder {
                 .setHeader("Fineract-Platform-TenantId", constant("{{dfsp.tenant-id}}"))
                 .setHeader("Content-Type", constant("application/json"))
                 .setHeader(Exchange.HTTP_METHOD, constant("POST"))
+
+
+                .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/putTransfersRequest.ds"))
+                //.log("Getting content: Begin")
+                .setProperty("fspId",simple("${body.content.get('fspId')}"))
+                //.log("Getting content: ENd")
+                .setBody(simple("${body.content}"))
+                .marshal().json()
+
+                //.log("Val of fspId: "+"${exchangeProperty.fspId}")
+
+                //.process(new BodyChecker())
+
                 //.bean("putTransfersRequest")
   //              .log("Pat Test Start")
  //               .log("Body: "+ "${body}")
  //               .setProperty("fspId", simple("${body.fspId}"))
+                .log("JTORR: Start")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
                         "'Calling the " + PATH_NAME_PUT + "', " +
                         "null, " +
                         "null, " +
-                        "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
-
-                //.setProperty("fspId", simple("${body.fspId}"))
+                        "'Request to POST {{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}, IN Payload: ${body} IN Headers: ${headers}')")
+                .log("JTORR: End")
+                //
 //                .log("Test: " + "${exchangeProperty.fspId}")
 //                .log("Pat Rest Finish")
                 //.toD("{{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}")
-                .toD("{{dfsp.host}}" + PATH)
+
+                .toD("{{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}")
+
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -129,9 +145,12 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
+
                 //.process(new BodyChecker())
                 //.marshal().json(JsonLibrary.Gson)
                 .transform(datasonnet("resource:classpath:mappings/putTransfersResponse.ds"))
+                .setBody(simple("${body.content}"))
+                .marshal().json()
                 //.bean("putTransfersResponse")
                 /*
                  * END processing

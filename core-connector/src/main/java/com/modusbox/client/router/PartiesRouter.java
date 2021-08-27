@@ -70,7 +70,6 @@ public class PartiesRouter extends RouteBuilder {
                 .setBody(simple("${body.content}"))
                 .marshal().json()
                 //.bean("getPartiesRequest")
-                .log("Start 1")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -78,10 +77,9 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
-                .log("End 1")
+
                 .toD("{{dfsp.host}}" + PATH)
                 //.unmarshal().json()
-                .log("Start 2")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -89,25 +87,19 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
-                .log("End 2")
-                .log("Preprocess Start")
                 .process(getPartyResponseValidator)
                 .unmarshal().json()
-                .log("Preprocessing End")
 
                 .setProperty("mfiName", constant("{{dfsp.name}}"))
 
-                .log("Start marshal 1")
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/getPartiesResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
-                .log("ENd marshal 1")
                 //.bean("getPartiesResponse")
                 /*
                  * END processing
                  */
-                .log("Start 3")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -115,7 +107,6 @@ public class PartiesRouter extends RouteBuilder {
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
-                .log("End 3")
                 .removeHeaders("*", "X-*")
 
                 .doCatch(CCCustomException.class,CloseWrittenOffAccountException.class)

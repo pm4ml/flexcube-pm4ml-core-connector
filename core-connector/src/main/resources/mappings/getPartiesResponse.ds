@@ -4,8 +4,8 @@ local billDetails = payload.result.billDetails;
 {
   idType: cml.header("idType"),
   idValue: cml.header("idValue"),
-  firstName: std.splitLimit(customerDetails.name," ", 1)[0],
-  lastName: std.splitLimit(customerDetails.name," ", 1)[1],
+  lastName: customerDetails.name,
+  displayName: customerDetails.name,
   extensionList: [
     {
         key: "mfiName",
