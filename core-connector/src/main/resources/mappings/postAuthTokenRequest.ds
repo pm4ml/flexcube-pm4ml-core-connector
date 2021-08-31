@@ -1,8 +1,8 @@
 {
-    "client_id": exchangeProperty.clientId,
-    "grant_type": exchangeProperty.grantType,
-    "scope": exchangeProperty.scope,
-    "username": std.strReplace(exchangeProperty.username, '\\', ''),
-    "password": std.strReplace(exchangeProperty.password, '\\', ''),
-    "isPasswordEncrypted": exchangeProperty.isPasswordEncrypted
+    "client_id": cml.exchangeProperty("clientId"),
+    "grant_type": cml.exchangeProperty("grantType"),
+    "scope": cml.exchangeProperty("scope"),
+    "username": std.strReplace(cml.exchangeProperty("username"), '\\', ''),
+    "password": std.strReplace(cml.exchangeProperty("password"), '\\', ''),
+    "isPasswordEncrypted": cml.exchangeProperty("isPasswordEncrypted")
 }

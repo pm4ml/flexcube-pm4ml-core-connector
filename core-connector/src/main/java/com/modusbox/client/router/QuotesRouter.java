@@ -1,5 +1,6 @@
 package com.modusbox.client.router;
 
+import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -19,9 +20,12 @@ public class QuotesRouter extends RouteBuilder {
             .help("Request latency in seconds for POST /quoterequests.")
             .register();
 
+    private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
+
     public void configure() {
 
-        new ExceptionHandlingRouter(this);
+        exceptionHandlingConfigurer.configureExceptionHandling(this);
+        //new ExceptionHandlingRouter(this);
 
         from("direct:postQuoterequests").routeId("com.modusbox.postQuoterequests").doTry()
                 .process(exchange -> {
@@ -40,7 +44,13 @@ public class QuotesRouter extends RouteBuilder {
                  */
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(200))
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-                .bean("postQuoterequestsResponseMock")
+
+                .marshal().json()
+                .transform(datasonnet("resource:classpath:mappings/postQuoterequestsResponseMock.ds"))
+                .setBody(simple("${body.content}"))
+                .marshal().json()
+
+                //.bean("postQuoterequestsResponseMock")
                 /*
                  * END processing
                  */

@@ -23,6 +23,7 @@
 <!--    <encryption:encryptable-property-placeholder encryptor="jasypt" properties-ref="applicationProperties"/>-->
 
     <import resource="classpath:spring/cxf.xml"/>
+    <!--
     <import resource="classpath:spring/mappings.xml"/>
-
+    -->
 </beans>

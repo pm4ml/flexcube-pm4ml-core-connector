@@ -65,4 +65,9 @@
         <property name="datasonnetFile" value="mappings/putTransfersRequest.ds"/>
     </bean>
 
+    <bean id="putTransfersResponse" class="com.modus.camel.datasonnet.DatasonnetProcessor" init-method="init">
+        <property name="inputMimeType" value="application/json"/>
+        <property name="outputMimeType" value="application/json"/>
+        <property name="datasonnetFile" value="mappings/putTransfersResponse.ds"/>
+    </bean>
 </beans>

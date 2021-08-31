@@ -13,12 +13,6 @@
     <artifactId>core-connector</artifactId>
     <name>Finflux Core Connector :: Main</name>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <camel.version>3.1.0</camel.version>
-        <java.version>1.8</java.version>
-    </properties>
-
     <dependencies>
 
         <dependency>
@@ -70,6 +64,7 @@
             <artifactId>camel-jasypt</artifactId>
 
         </dependency>
+        <!--
         <dependency>
             <groupId>com.modus.camel.datasonnet</groupId>
             <artifactId>camel-datasonnet</artifactId>
@@ -77,7 +72,7 @@
             <scope>system</scope>
             <systemPath>${basedir}/lib/camel-datasonnet-1.0.4.jar</systemPath>
         </dependency>
-
+        -->
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-cxf</artifactId>
@@ -155,14 +150,19 @@
             <version>4.8.52</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-datasonnet</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.datasonnet</groupId>
             <artifactId>datasonnet-mapper</artifactId>
-            <version>1.0.4</version>
+            <version>${datasonnet.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <version>2.7</version>
         </dependency>
         <dependency>
             <groupId>com.modus.log4j2.layout</groupId>
@@ -176,13 +176,23 @@
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>2.13.2</version>
         </dependency>
+        <!--
+        <dependency>
+            <groupId>com.modus.pm4ml.core.connectors.common</groupId>
+            <artifactId>core-connectors-camel-common</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/cbs-adapters-exception-handling-1.0.0-SNAPSHOT.jar</systemPath>
+        </dependency>
+        -->
         <dependency>
             <groupId>com.modus.adapter.exception</groupId>
             <artifactId>cbs-adapters-exception-handling</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/cbs-adapters-exception-handling-1.0.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${basedir}/lib/core-connectors-camel-common-1.0.0-SNAPSHOT.jar</systemPath>
         </dependency>
+
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
