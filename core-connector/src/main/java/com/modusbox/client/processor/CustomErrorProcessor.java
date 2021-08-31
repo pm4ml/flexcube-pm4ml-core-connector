@@ -2,13 +2,18 @@ package com.modusbox.client.processor;
 
 import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.customexception.CloseWrittenOffAccountException;
+import com.modusbox.client.enums.ErrorCode;
 import com.modusbox.log4j2.message.CustomJsonMessage;
 import com.modusbox.log4j2.message.CustomJsonMessageImpl;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.http.base.HttpOperationFailedException;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
+
+import javax.ws.rs.InternalServerErrorException;
+import java.net.SocketTimeoutException;
 
 @Component("customErrorProcessor")
 public class CustomErrorProcessor implements Processor {
@@ -22,6 +27,8 @@ public class CustomErrorProcessor implements Processor {
                 "\"message\": \"Unknown\" }";
         String statusCode = "5000";
         int httpResponseCode = 500;
+
+        JSONObject errorResponse = null;
 
         String errorDescription = "Downstream API failed.";
         // The exception may be in 1 of 2 places
@@ -47,19 +54,6 @@ public class CustomErrorProcessor implements Processor {
                     reasonText = "{ \"statusCode\": \"" + statusCode + "\"," +
                             "\"message\": \"" + errorDescription + "\"} ";
                 }
-            } else if(exception instanceof CCCustomException) {
-                try {
-
-                    JSONObject errorResponse = new JSONObject(exception.getMessage());
-                    httpResponseCode = errorResponse.getInt("errorCode");
-                    errorResponse = errorResponse.getJSONObject("errorInformation");
-                    statusCode = String.valueOf(errorResponse.getInt("statusCode"));
-                    errorDescription = errorResponse.getString("description");
-                } finally {
-
-                    reasonText = "{ \"statusCode\": \"" + statusCode + "\"," +
-                            "\"message\": \"" + errorDescription + "\"} ";
-                }
             } else if(exception instanceof CloseWrittenOffAccountException) {
                 httpResponseCode = 200;
                 reasonText = "{\"idType\": \"" + (String) exchange.getIn().getHeader("idType") +
@@ -67,6 +61,23 @@ public class CustomErrorProcessor implements Processor {
                         "\",\"extensionList\": [{\"key\": \"message\",\"value\": \"" + exception.getMessage() +
                         "\"}]}";
 
+            } else {
+                try {
+                    if(exception instanceof CCCustomException) {
+                        errorResponse = new JSONObject(exception.getMessage());
+                    } else if(exception instanceof InternalServerErrorException) {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, exception.getMessage()));
+                    } else if(exception instanceof ConnectTimeoutException || exception instanceof SocketTimeoutException) {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.SERVER_TIMED_OUT, exception.getMessage()));
+                    }
+                } finally {
+                    httpResponseCode = errorResponse.getInt("errorCode");
+                    errorResponse = errorResponse.getJSONObject("errorInformation");
+                    statusCode = String.valueOf(errorResponse.getInt("statusCode"));
+                    errorDescription = errorResponse.getString("description");
+                    reasonText = "{ \"statusCode\": \"" + statusCode + "\"," +
+                            "\"message\": \"" + errorDescription + "\"} ";
+                }
             }
                 customJsonMessage.logJsonMessage("error", String.valueOf(exchange.getIn().getHeader("X-CorrelationId")),
                     "Processing the exception at CustomErrorProcessor", null, null,
