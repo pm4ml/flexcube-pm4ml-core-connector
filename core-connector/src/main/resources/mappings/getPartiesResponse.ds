@@ -9,7 +9,7 @@ local billDetails = payload.result.billDetails;
   extensionList: [
     {
         key: "mfiName",
-        value: cml.exchangeProperty("mfiName")
+        value: "Hana Microfinance"
     },
     {
         key: "amountDue",
