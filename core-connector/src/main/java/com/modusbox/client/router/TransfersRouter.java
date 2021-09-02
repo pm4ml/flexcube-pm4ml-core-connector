@@ -63,12 +63,20 @@ public class TransfersRouter extends RouteBuilder {
                 /*
                  * BEGIN processing
                  */
+
                 .removeHeaders("Camel*")
-                //.marshal().json(JsonLibrary.Gson)
+                /*
+                .marshal().json(JsonLibrary.Gson)
                 //.bean("postTransfersResponse")
+                .transform(datasonnet("resource:classpath:mappings/postTransfersResponse.ds"))
+                .setBody(simple("${body.content}"))
+                .marshal().json()
+                
+                 */
                 /*
                  * END processing
                  */
+
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -76,7 +84,7 @@ public class TransfersRouter extends RouteBuilder {
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
-                .setBody(constant(null))
+                //.setBody(constant(null))
                 .removeHeaders("*", "X-*")
                 .doFinally().process(exchange -> {
             ((Histogram.Timer) exchange.getProperty(TIMER_NAME_POST)).observeDuration(); // stop Prometheus Histogram metric
@@ -122,7 +130,6 @@ public class TransfersRouter extends RouteBuilder {
   //              .log("Pat Test Start")
  //               .log("Body: "+ "${body}")
  //               .setProperty("fspId", simple("${body.fspId}"))
-                .log("JTORR: Start")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -130,7 +137,6 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Request to POST {{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}, IN Payload: ${body} IN Headers: ${headers}')")
-                .log("JTORR: End")
                 //
 //                .log("Test: " + "${exchangeProperty.fspId}")
 //                .log("Pat Rest Finish")

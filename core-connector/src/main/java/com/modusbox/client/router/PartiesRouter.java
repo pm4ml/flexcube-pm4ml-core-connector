@@ -90,7 +90,6 @@ public class PartiesRouter extends RouteBuilder {
                 .process(getPartyResponseValidator)
                 .unmarshal().json()
 
-                .setProperty("mfiName", constant("{{dfsp.name}}"))
 
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/getPartiesResponse.ds"))
