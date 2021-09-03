@@ -2,9 +2,12 @@ local quote = payload.quoteRequest.body;
 local accNumber = quote.payee.partyIdInfo.partyIdentifier;
 local transfer = payload.prepare.body;
 
+local accountIdentifier = std.substr(accNumber, 3, std.length(accNumber));
+local padLength=9-std.length(accountIdentifier);
+local zeros = ds.strings.repeat("0",padLength);
 {
     "channelReferenceId": quote.quoteId,
-    "loanAccountNumber": std.substr(accNumber, 3, std.length(accNumber)),
+    "loanAccountNumber": zeros + accountIdentifier,
     "fspId": quote.payer.partyIdInfo.fspId,
     "channelPaymentDetails": {
         "paymentTransactionId": payload.transferId,

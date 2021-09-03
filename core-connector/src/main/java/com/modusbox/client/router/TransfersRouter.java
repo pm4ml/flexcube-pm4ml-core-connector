@@ -1,12 +1,10 @@
 package com.modusbox.client.router;
 
 import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
-import com.modusbox.client.processor.BodyChecker;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.model.dataformat.JsonLibrary;
 
 public class TransfersRouter extends RouteBuilder {
 
@@ -71,7 +69,7 @@ public class TransfersRouter extends RouteBuilder {
                 .transform(datasonnet("resource:classpath:mappings/postTransfersResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
-                
+
                  */
                 /*
                  * END processing
@@ -115,21 +113,15 @@ public class TransfersRouter extends RouteBuilder {
 
 
                 .marshal().json()
+
+                //.process(padLoanAccount)
+
                 .transform(datasonnet("resource:classpath:mappings/putTransfersRequest.ds"))
-                //.log("Getting content: Begin")
+
                 .setProperty("fspId",simple("${body.content.get('fspId')}"))
-                //.log("Getting content: ENd")
                 .setBody(simple("${body.content}"))
                 .marshal().json()
 
-                //.log("Val of fspId: "+"${exchangeProperty.fspId}")
-
-                //.process(new BodyChecker())
-
-                //.bean("putTransfersRequest")
-  //              .log("Pat Test Start")
- //               .log("Body: "+ "${body}")
- //               .setProperty("fspId", simple("${body.fspId}"))
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -137,10 +129,7 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Request to POST {{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}, IN Payload: ${body} IN Headers: ${headers}')")
-                //
-//                .log("Test: " + "${exchangeProperty.fspId}")
-//                .log("Pat Rest Finish")
-                //.toD("{{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}")
+
 
                 .toD("{{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}")
 
@@ -152,12 +141,9 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
 
-                //.process(new BodyChecker())
-                //.marshal().json(JsonLibrary.Gson)
                 .transform(datasonnet("resource:classpath:mappings/putTransfersResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
-                //.bean("putTransfersResponse")
                 /*
                  * END processing
                  */
@@ -169,7 +155,6 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "'Output Payload: empty')") // default logger
                 .removeHeaders("*", "X-*")
-                //.setBody(constant(null))
                 .doFinally().process(exchange -> {
             ((Histogram.Timer) exchange.getProperty(TIMER_NAME_PUT)).observeDuration(); // stop Prometheus Histogram metric
         }).end()
