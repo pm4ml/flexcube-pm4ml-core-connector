@@ -14,6 +14,6 @@ local zeros = ds.strings.repeat("0",padLength);
         "transactionAmount": transfer.amount.amount,
         "transactionStatus": "SUCCESS",
         "transactionDate": DS.ZonedDateTime.now(),
-        "transactionRemarks": quote.note
+        "transactionRemarks": payload.transferId
     }
 }
