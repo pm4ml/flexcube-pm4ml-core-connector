@@ -15,7 +15,6 @@ public class PadLoanAccount implements Processor {
             while(loanAccount.length() != 9) {
                 loanAccount = "0" + loanAccount;
             }
-            System.out.println("Loan Account: "+loanAccount);
         }
         exchange.setProperty("loanAccount", loanAccount);
     }
