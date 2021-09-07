@@ -78,16 +78,17 @@ paths:
           $ref: '#/components/responses/transferTimeout'
 
   #Inbound API (Mojaloop Switch → Payment Manager → Payee DFSP)
-  /parties/{idType}/{idValue}:
+  /parties/{idType}/{idValue}/{subIdValue}:
     get:
       summary: Requests information relating to a transfer party identified by the specified identifier type and value
-      description: The HTTP request `GET /parties/{idType}/{idValue}` is sent to the Payee DFSP, and it is used to look up information regarding the requested transfer party, identified by `{idType}` and `{idValue}`.
+      description: The HTTP request `GET /parties/{idType}/{idValue}/{subIdValue}` is sent to the Payee DFSP, and it is used to look up information regarding the requested transfer party, identified by `{idType}` and `{idValue}`.
       operationId: getParties
       tags:
         - Parties
       parameters:
         - $ref: '#/components/parameters/idType'
         - $ref: '#/components/parameters/idValue'
+        - $ref: '#/components/parameters/subIdValue'
       responses:
         200:
           description: Response containing details of the requested party
@@ -1195,6 +1196,17 @@ components:
         minLength: 1
         maxLength: 128
       description: Identifier of the party.
+
+    subIdValue:
+      name: subIdValue
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+      description: Phone or Mobile Number of the party.
+
 
     transferId:
       name: transferId

@@ -6,6 +6,7 @@ import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import com.modusbox.client.processor.PadLoanAccount;
 import com.modusbox.client.validator.AccountNumberFormatValidator;
 import com.modusbox.client.validator.GetPartyResponseValidator;
+import com.modusbox.client.validator.PhoneNumberValidation;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class PartiesRouter extends RouteBuilder {
 
     private final PadLoanAccount padLoanAccount = new PadLoanAccount();
+    private final PhoneNumberValidation phoneNumberValidation = new PhoneNumberValidation();
     private final GetPartyResponseValidator getPartyResponseValidator = new GetPartyResponseValidator();
     private final AccountNumberFormatValidator accountNumberFormatValidator = new AccountNumberFormatValidator();
     private static final String TIMER_NAME = "histogram_get_parties_timer";
@@ -80,6 +82,7 @@ public class PartiesRouter extends RouteBuilder {
 
                 .toD("{{dfsp.host}}" + PATH)
                 //.unmarshal().json()
+                .process(phoneNumberValidation)
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
