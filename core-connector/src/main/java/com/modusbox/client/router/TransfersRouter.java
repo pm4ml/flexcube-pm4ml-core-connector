@@ -121,7 +121,7 @@ public class TransfersRouter extends RouteBuilder {
                 .setProperty("fspId",simple("${body.content.get('fspId')}"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
-
+                .log("Start")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -129,7 +129,7 @@ public class TransfersRouter extends RouteBuilder {
                         "null, " +
                         "null, " +
                         "'Request to POST {{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}, IN Payload: ${body} IN Headers: ${headers}')")
-
+                .log("Finish")
 
                 .toD("{{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}")
 

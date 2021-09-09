@@ -16,7 +16,7 @@ public class PhoneNumberValidation implements Processor {
         String respPhoneNumber = PhoneNumberUtils.stripCode(
                 respObject.getJSONObject("result").getJSONObject("customerDetails").getString("mobileNo"));
         String phoneNumber = PhoneNumberUtils.stripCode(
-                (String) exchange.getIn().getHeader("subIdValue"));
+                (String) exchange.getIn().getHeader("idSubValue"));
         if(!respPhoneNumber.trim().equals(phoneNumber)) {
             throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.PHONE_NUMBER_MISMATCH));
         }
