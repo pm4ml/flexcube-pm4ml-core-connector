@@ -81,7 +81,7 @@ paths:
   /parties/{idType}/{idValue}/{idSubValue}:
     get:
       summary: Requests information relating to a transfer party identified by the specified identifier type and value
-      description: The HTTP request `GET /parties/{idType}/{idValue}/{subIdValue}` is sent to the Payee DFSP, and it is used to look up information regarding the requested transfer party, identified by `{idType}` and `{idValue}`.
+      description: The HTTP request `GET /parties/{idType}/{idValue}/{idSubValue}` is sent to the Payee DFSP, and it is used to look up information regarding the requested transfer party, identified by `{idType}` and `{idValue}`.
       operationId: getParties
       tags:
         - Parties
