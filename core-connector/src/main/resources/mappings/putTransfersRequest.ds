@@ -6,7 +6,7 @@ local accountIdentifier = std.substr(accNumber, 3, std.length(accNumber));
 local padLength=9-std.length(accountIdentifier);
 local zeros = ds.strings.repeat("0",padLength);
 {
-    "channelReferenceId": quote.quoteId,
+    "channelReferenceId": cml.header('transferId'),
     "loanAccountNumber": zeros + accountIdentifier,
     "fspId": quote.payer.partyIdInfo.fspId,
     "channelPaymentDetails": {
@@ -14,6 +14,6 @@ local zeros = ds.strings.repeat("0",padLength);
         "transactionAmount": transfer.amount.amount,
         "transactionStatus": "SUCCESS",
         "transactionDate": DS.ZonedDateTime.now(),
-        "transactionRemarks": payload.transferId
+        "transactionRemarks": "MMD"
     }
 }

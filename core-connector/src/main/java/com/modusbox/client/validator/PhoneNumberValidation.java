@@ -13,11 +13,11 @@ public class PhoneNumberValidation implements Processor {
     public void process(Exchange exchange) throws Exception {
         String body = exchange.getIn().getBody(String.class);
         JSONObject respObject = new JSONObject(body);
-        String respPhoneNumber = PhoneNumberUtils.stripCode(
-                respObject.getJSONObject("result").getJSONObject("customerDetails").getString("mobileNo"));
-        String phoneNumber = PhoneNumberUtils.stripCode(
-                (String) exchange.getIn().getHeader("idSubValue"));
-        if(!respPhoneNumber.trim().equals(phoneNumber)) {
+        String mfiPhoneNumber =
+                respObject.getJSONObject("result").getJSONObject("customerDetails").getString("mobileNo");
+        String walletPhoneNumber =
+                (String) exchange.getIn().getHeader("idSubValue");
+        if(!PhoneNumberUtils.isPhoneNumberMatch(walletPhoneNumber.trim(), mfiPhoneNumber.trim())) {
             throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.PHONE_NUMBER_MISMATCH));
         }
     }
