@@ -11,10 +11,15 @@ public class PhoneNumberValidation implements Processor {
 
     @Override
     public void process(Exchange exchange) throws Exception {
+        String mfiPhoneNumber = "";
         String body = exchange.getIn().getBody(String.class);
         JSONObject respObject = new JSONObject(body);
-        String mfiPhoneNumber =
-                respObject.getJSONObject("result").getJSONObject("customerDetails").getString("mobileNo");
+        JSONObject customerDetails = respObject.getJSONObject("result").getJSONObject("customerDetails");
+        if(customerDetails.has("mobileNo")) {
+            mfiPhoneNumber =
+                    customerDetails.getString("mobileNo");
+        }
+
         String walletPhoneNumber =
                 (String) exchange.getIn().getHeader("idSubValue");
         if(!PhoneNumberUtils.isPhoneNumberMatch(walletPhoneNumber.trim(), mfiPhoneNumber.trim())) {
