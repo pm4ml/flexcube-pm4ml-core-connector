@@ -4,6 +4,7 @@ local billDetails = payload.result.billDetails;
 {
   idType: cml.header("idType"),
   idValue: cml.header("idValue"),
+  idSubValue: cml.header("idSubValue"),
   lastName: customerDetails.name,
   displayName: customerDetails.name,
   extensionList: [
