@@ -81,8 +81,7 @@ public class PartiesRouter extends RouteBuilder {
                         "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
 
                 .toD("{{dfsp.host}}" + PATH)
-                //.unmarshal().json()
-                .process(phoneNumberValidation)
+                //.marshal().json()
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "${header.X-CorrelationId}, " +
@@ -91,6 +90,8 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
                 .process(getPartyResponseValidator)
+
+                .process(phoneNumberValidation)
                 .unmarshal().json()
 
 
