@@ -23,12 +23,15 @@ public class BillsPaymentResponseValidator implements Processor {
                             ErrorCode.PAYER_FSP_ID_NOT_FOUND,
                             errorReason
                     ));
-                }
-
-                if(errorCode.equals("FBF002")) {
+                } else if(errorCode.equals("FBF002")) {
 
                     throw new CCCustomException(ErrorCode.getErrorResponse(
                             ErrorCode.DUPLICATE_REFERENCE_ID,
+                            errorReason
+                    ));
+                } else if(errorCode.equals("FBP009")) {
+                    throw new CCCustomException(ErrorCode.getErrorResponse(
+                            ErrorCode.GENERIC_DOWNSTREAM_ERROR_PAYEE,
                             errorReason
                     ));
                 } else {
