@@ -18,6 +18,12 @@ public class BillsPaymentResponseValidator implements Processor {
             if (!status.equals("SUCCESS")) {
                 String errorCode = respObject.getJSONObject("result").getString("errorCode");
                 String errorReason = respObject.getJSONObject("result").getString("errorReason");
+                if(errorCode.equals("FBFE001")) {
+                    throw new CCCustomException(ErrorCode.getErrorResponse(
+                            ErrorCode.PAYER_FSP_ID_NOT_FOUND,
+                            errorReason
+                    ));
+                }
 
                 if(errorCode.equals("FBF002")) {
 
