@@ -31,7 +31,7 @@ public class BillsPaymentResponseValidator implements Processor {
                     ));
                 } else if(errorCode.equals("FBP009")) {
                     throw new CCCustomException(ErrorCode.getErrorResponse(
-                            ErrorCode.GENERIC_DOWNSTREAM_ERROR_PAYEE,
+                            ErrorCode.PAYEE_LIMIT_ERROR,
                             errorReason
                     ));
                 } else {
