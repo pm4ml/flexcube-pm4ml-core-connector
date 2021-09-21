@@ -7,8 +7,14 @@ import javax.validation.constraints.Size;
 
 public class PartiesApiImpl implements PartiesApi {
 
+
     @Override
-    public TransferPartyInbound getParties(String idType, @Size(min = 1, max = 128) String idValue,@Size(min = 1, max = 128) String idSubValue) {
+    public TransferPartyInbound getPartiesByIdTypeIdValue(String idType, String idValue) {
+        return null;
+    }
+
+    @Override
+    public TransferPartyInbound getPartiesByIdTypeIdValueIdSubValue(String idType, String idValue, String idSubValue) {
         return null;
     }
 }

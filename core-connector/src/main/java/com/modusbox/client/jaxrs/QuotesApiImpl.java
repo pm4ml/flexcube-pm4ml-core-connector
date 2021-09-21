@@ -6,8 +6,9 @@ import com.modusbox.client.model.QuoteResponse;
 
 public class QuotesApiImpl implements QuoterequestsApi {
 
+
     @Override
-    public QuoteResponse postQuoterequests(QuoteRequest quoteRequest) {
+    public QuoteResponse postQuoteRequests(QuoteRequest quoteRequest) {
         return null;
     }
 }
