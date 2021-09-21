@@ -9,11 +9,14 @@ import javax.validation.Valid;
 
 public class TransfersApiImpl implements TransfersApi {
 
+
     @Override
-    public TransferResponseInbound postTransfers(@Valid TransferRequestInbound transferRequestInbound) {
+    public TransferResponseInbound postTransfers(TransferRequestInbound transferRequestInbound) {
         return null;
     }
 
     @Override
-    public void putTransfers(String transferId, FulfilNotification fulfilNotification) { }
+    public TransferResponseInbound putTransfersByTransferId(String transferId, FulfilNotification fulfilNotification) {
+        return null;
+    }
 }
