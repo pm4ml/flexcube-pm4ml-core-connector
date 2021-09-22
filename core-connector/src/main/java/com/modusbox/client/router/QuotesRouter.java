@@ -27,7 +27,7 @@ public class QuotesRouter extends RouteBuilder {
         exceptionHandlingConfigurer.configureExceptionHandling(this);
         //new ExceptionHandlingRouter(this);
 
-        from("direct:postQuoterequests").routeId("com.modusbox.postQuoterequests").doTry()
+        from("direct:postQuoteRequests").routeId("com.modusbox.postQuoterequests").doTry()
                 .process(exchange -> {
                     reqCounter.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME, reqLatency.startTimer()); // initiate Prometheus Histogram metric
