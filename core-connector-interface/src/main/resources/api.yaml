@@ -1581,7 +1581,7 @@ components:
 
     transferResponseInbound:
       type: object
-        #required:
+      #required:
       #- homeTransactionId
       properties:
         homeTransactionId:
