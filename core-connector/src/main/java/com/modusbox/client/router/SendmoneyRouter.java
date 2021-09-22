@@ -94,7 +94,7 @@ public class SendmoneyRouter extends RouteBuilder {
                 }).end()
         ;
 
-        from("direct:putSendmoneyById") .routeId("com.modusbox.putSendmoneyById").doTry()
+        from("direct:putSendMoneyByTransferId") .routeId("com.modusbox.putSendmoneyById").doTry()
                 .process(exchange -> {
                     reqCounterPut.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME_PUT, reqLatencyPut.startTimer()); // initiate Prometheus Histogram metric
