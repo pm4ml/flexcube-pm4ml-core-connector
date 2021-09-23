@@ -58,7 +58,7 @@ public class CustomErrorProcessor implements Processor {
                 httpResponseCode = 200;
                 reasonText = "{\"idType\": \"" + (String) exchange.getIn().getHeader("idType") +
                         "\",\"idValue\": \"" + (String) exchange.getIn().getHeader("idValue") +
-                        "\",\"extensionList\": [{\"key\": \"message\",\"value\": \"" + exception.getMessage() +
+                        "\",\"extensionList\": [{\"key\": \"errorMessage\",\"value\": \"" + exception.getMessage() +
                         "\"}]}";
 
             } else {
