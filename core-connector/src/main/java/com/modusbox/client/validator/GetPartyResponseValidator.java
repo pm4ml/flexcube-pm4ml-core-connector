@@ -29,7 +29,10 @@ public class GetPartyResponseValidator implements Processor {
                            errorReason
                    ));
                } else {
-                   throw new Exception();
+                   throw new CCCustomException(ErrorCode.getErrorResponse(
+                           ErrorCode.GENERIC_DOWNSTREAM_ERROR_PAYEE,
+                           errorReason
+                   ));
                }
             }
         }
