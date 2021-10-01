@@ -6,6 +6,7 @@ import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import com.modusbox.client.processor.PadLoanAccount;
 import com.modusbox.client.validator.AccountNumberFormatValidator;
 import com.modusbox.client.validator.GetPartyResponseValidator;
+import com.modusbox.client.validator.IdSubValueChecker;
 import com.modusbox.client.validator.PhoneNumberValidation;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
@@ -20,6 +21,9 @@ public class PartiesRouter extends RouteBuilder {
     private final PhoneNumberValidation phoneNumberValidation = new PhoneNumberValidation();
     private final GetPartyResponseValidator getPartyResponseValidator = new GetPartyResponseValidator();
     private final AccountNumberFormatValidator accountNumberFormatValidator = new AccountNumberFormatValidator();
+
+    private final IdSubValueChecker idSubValueChecker = new IdSubValueChecker();
+
     private static final String TIMER_NAME = "histogram_get_parties_timer";
 
     public static final Counter reqCounter = Counter.build()
@@ -41,6 +45,31 @@ public class PartiesRouter extends RouteBuilder {
 
         exceptionHandlingConfigurer.configureExceptionHandling(this);
         //new ExceptionHandlingRouter(this);
+
+        from("direct:getPartiesByIdTypeIdValue").routeId("com.modusbox.getPartiesByIdTypeIdValue").doTry()
+                .process(exchange -> {
+                    reqCounter.inc(1); // increment Prometheus Counter metric
+                    exchange.setProperty(TIMER_NAME, reqLatency.startTimer()); // initiate Prometheus Histogram metric
+                })
+
+                .to("bean:customJsonMessage?method=logJsonMessage(" +
+                        "'info', " +
+                        "${header.X-CorrelationId}, " +
+                        "'Request received GET /parties/${header.idType}/${header.idValue}', " +
+                        "'Tracking the request', " +
+                        "'Call the Mambu API,  Track the response', " +
+                        "'Input Payload: ${body}')") // default logger
+                /*
+                 * BEGIN processing
+                 */
+                .process(idSubValueChecker)
+
+                .doCatch(CCCustomException.class)
+                    .to("direct:extractCustomErrors")
+                .doFinally().process(exchange -> {
+                    ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
+            }).end()
+        ;
 
         from("direct:getPartiesByIdTypeIdValueIdSubValue").routeId("com.modusbox.getParties").doTry()
                 .process(exchange -> {
