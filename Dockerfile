@@ -1,4 +1,4 @@
-FROM maven:3.8.3-openjdk-8 AS builder
+FROM openjdk:8-jdk-alpine
 
 COPY core-connector/target/core-connector-1.2.0.jar app.jar
 
