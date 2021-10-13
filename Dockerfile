@@ -1,6 +1,6 @@
 FROM maven:3.8.3-openjdk-8 AS builder
 
-COPY core-connector/target/1.2.0.jar app.jar
+COPY core-connector/target/core-connector-1.2.0.jar app.jar
 
 ENV MLCONN_OUTBOUND_ENDPOINT=http://simulator:3004
 ENV DFSP_NAME="DFSP CO. LTD."
