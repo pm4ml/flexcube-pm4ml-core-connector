@@ -56,7 +56,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     -
       name: Build software
-      run: maven clean build
+      run: mvn clean build
     -
       name: Build and push
       id: docker_build
