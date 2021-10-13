@@ -1,8 +1,19 @@
+FROM maven:3.8.3-openjdk-8 AS builder
+
+WORKDIR /opt/flexcube-pm4ml-core-connector/
+
+COPY pom.xml ./
+COPY core-connector ./
+COPY core-connector-it ./
+COPY core-connector-interface ./
+
+RUN mvn clean build
+
+RUN ls -hAl core-connector/target/
+
 FROM openjdk:8-jdk-alpine
 
-ARG JAR_FILE=core-connector/target/*.jar
-
-COPY ${JAR_FILE} app.jar
+COPY --from=builder /opt/core-connector/target/app.jar app.jar
 
 ENV MLCONN_OUTBOUND_ENDPOINT=http://simulator:3004
 ENV DFSP_NAME="DFSP CO. LTD."

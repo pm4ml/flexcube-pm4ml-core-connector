@@ -6,12 +6,12 @@
 
     <parent>
         <groupId>com.modusbox</groupId>
-        <artifactId>finflux-pm4ml-core-connector</artifactId>
+        <artifactId>flexcube-pm4ml-core-connector</artifactId>
         <version>1.2.0</version>
     </parent>
 
     <artifactId>core-connector</artifactId>
-    <name>Finflux Core Connector :: Main</name>
+    <name>Flexcube Core Connector :: Main</name>
 
     <dependencies>
 

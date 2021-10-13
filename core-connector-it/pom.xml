@@ -6,7 +6,7 @@
 
     <parent>
         <groupId>com.modusbox</groupId>
-        <artifactId>finflux-pm4ml-core-connector</artifactId>
+        <artifactId>flexcube-pm4ml-core-connector</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 

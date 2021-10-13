@@ -11,10 +11,10 @@
     </parent>
 
     <groupId>com.modusbox</groupId>
-    <artifactId>finflux-pm4ml-core-connector</artifactId>
+    <artifactId>flexcube-pm4ml-core-connector</artifactId>
     <packaging>pom</packaging>
     <version>1.2.0</version>
-    <name>Finflux Core Connector :: Parent</name>
+    <name>Flexcube Core Connector :: Parent</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
