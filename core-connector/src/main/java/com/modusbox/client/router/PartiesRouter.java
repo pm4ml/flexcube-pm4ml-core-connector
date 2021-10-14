@@ -36,8 +36,8 @@ public class PartiesRouter extends RouteBuilder {
             .help("Request latency in seconds for GET /parties.")
             .register();
 
-    private final String PATH_NAME = "Finflux Advance Fetch Due API";
-    private final String PATH = "/v1/paymentgateway/billerpayments/advance-fetch";
+    private final String PATH_NAME = "Flexcube Advance Fetch Due API";
+    private final String PATH = "/loan";
 
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
 
@@ -45,7 +45,7 @@ public class PartiesRouter extends RouteBuilder {
 
         exceptionHandlingConfigurer.configureExceptionHandling(this);
         //new ExceptionHandlingRouter(this);
-
+/*
         from("direct:getPartiesByIdTypeIdValue").routeId("com.modusbox.getPartiesByIdTypeIdValue").doTry()
                 .process(exchange -> {
                     reqCounter.inc(1); // increment Prometheus Counter metric
@@ -54,14 +54,12 @@ public class PartiesRouter extends RouteBuilder {
 
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
+                        //"${header.X-CorrelationId}, " +
                         "'Request received GET /parties/${header.idType}/${header.idValue}', " +
                         "'Tracking the request', " +
                         "'Call the Mambu API,  Track the response', " +
                         "'Input Payload: ${body}')") // default logger
-                /*
-                 * BEGIN processing
-                 */
+
                 .process(idSubValueChecker)
 
                 .doCatch(CCCustomException.class)
@@ -70,77 +68,83 @@ public class PartiesRouter extends RouteBuilder {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
             }).end()
         ;
-
-        from("direct:getPartiesByIdTypeIdValueIdSubValue").routeId("com.modusbox.getParties").doTry()
+*/
+       from("direct:getPartiesByIdTypeIdValueIdSubValue").routeId("com.modusbox.getParties").doTry()
                 .process(exchange -> {
                     reqCounter.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME, reqLatency.startTimer()); // initiate Prometheus Histogram metric
                 })
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
+                        //"${header.X-CorrelationId}, " +
                         "'Request received GET /parties/${header.idType}/${header.idValue}', " +
                         "'Tracking the request', " +
                         "'Call the " + PATH_NAME + ",  Track the response', " +
                         "'Input Payload: ${body}')") // default logger
-                /*
-                 * BEGIN processing
-                 */
-                .process(accountNumberFormatValidator)
-                .process(padLoanAccount)
+               /*
+                * BEGIN processing
+                */
+                .log("Begin processing")
+                //.process(accountNumberFormatValidator)
+                //.process(padLoanAccount)
                 .to("direct:getAuthHeader")
-                .process(exchange -> exchange.setProperty("uuid", UUID.randomUUID().toString()))
-                .removeHeaders("Camel*")
-                .setHeader("Fineract-Platform-TenantId", constant("{{dfsp.tenant-id}}"))
+                //.process(exchange -> exchange.setProperty("uuid", UUID.randomUUID().toString()))
+                .removeHeaders("CamelHttp*")
                 .setHeader("Content-Type", constant("application/json"))
-                .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-                .setBody(constant(null))
-
-                .marshal().json()
-                .transform(datasonnet("resource:classpath:mappings/getPartiesRequest.ds"))
-                .setBody(simple("${body.content}"))
-                .marshal().json()
-                //.bean("getPartiesRequest")
+                .setHeader("Authorization", constant("Basic U1BOVFNBVVNFUjAyOkRlZmF1bHRAMTIz"))
+                .setHeader(Exchange.HTTP_METHOD, constant("GET"))
+                //.setBody(simple("{}"))
+                //.setBody(constant(null))
+               .log("Header message : ${headers}")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Calling the " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
-                        "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
+                        "'Request to GET {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
+                .log("Before Get Party Function")
+                .log("{{dfsp.host}}" + PATH + "?ACCOUNT_NUMBER=03700210010444")
 
-                .toD("{{dfsp.host}}" + PATH)
-                //.marshal().json()
+
+                //.toD("{{dfsp.host}}" + PATH + "?ACCOUNT_NUMBER=03700210010444")
+                //.to("http://172.16.113.3:7090/sathapana_api_space/api/loan?ACCOUNT_NUMBER=03700210010444" + "?httpClient.authenticationPreemptive=true")
+               //.to("http://172.16.113.3:7090/sathapana_api_space/api/loan?ACCOUNT_NUMBER=03700210010444" + "?httpClient.authenticationPreemptive=true" + "?bridgeEndpoint=true")
+                 //.toD("http://172.16.113.3:7090/sathapana_api_space/api/loan?ACCOUNT_NUMBER=03700210010444")
+                       .toD("http://172.16.113.3:7090/sathapana_api_space/api/loan?ACCOUNT_NUMBER=03700210010444" + "?bridgeEndpoint=true")
+                .log("After Get Party Function")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Called " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
-                        "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
-                .process(getPartyResponseValidator)
+                        "'Response from GET {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
 
-                .process(phoneNumberValidation)
+                //.process(getPartyResponseValidator)
+
+                //.process(phoneNumberValidation)
                 .unmarshal().json()
 
-
+                .log("Before accept from getPartiesResponse.ds data sonnet")
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/getPartiesResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
                 //.bean("getPartiesResponse")
-                /*
-                 * END processing
-                 */
+                .log("${body}")
+                .log("After accept from getPartiesResponse.ds data sonnet")
+
+                //.log("${body.content}")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Response for GET /parties/${header.idType}/${header.idValue}', " +
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
-
+               /*
+                * END processing
+                */
+                .log("End processing")
                 .doCatch(CCCustomException.class,CloseWrittenOffAccountException.class)
                     .to("direct:extractCustomErrors")
 
@@ -148,5 +152,9 @@ public class PartiesRouter extends RouteBuilder {
             ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
         }).end()
         ;
+
+
+
+
     }
 }

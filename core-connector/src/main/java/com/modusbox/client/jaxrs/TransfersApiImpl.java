@@ -19,4 +19,6 @@ public class TransfersApiImpl implements TransfersApi {
     public TransferResponseInbound putTransfersByTransferId(String transferId, FulfilNotification fulfilNotification) {
         return null;
     }
+
+
 }

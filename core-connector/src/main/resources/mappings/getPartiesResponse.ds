@@ -1,24 +1,55 @@
-local customerDetails = payload.result.customerDetails;
-local billDetails = payload.result.billDetails;
+/** DataSonnet
+version=2.0
+output application/json
+input payload application/json
+*/
+if ds.sizeOf(payload) >0
+then
+
+local loanInfo = payload.data[0];
+local amountDueManual = loanInfo.Past_Due_Amount + loanInfo.DUE_AMOUNT;
+
+
+local finalamountDue =
+if amountDueManual > 0 then
+    amountDueManual
+else
+    loanInfo.NEXT_INSTALLATION_AMOUNT;
+
+local finaldueDate =
+if amountDueManual > 0 then
+   if loanInfo.DUE_DATE > loanInfo.PAST_DUE_DATE then
+        loanInfo.DUE_DATE
+    else loanInfo.PAST_DUE_DATE
+else
+    loanInfo.NEXT_INSTALLATION_DATE;
+
 
 {
-  idType: cml.header("idType"),
-  idValue: cml.header("idValue"),
-  idSubValue: cml.header("idSubValue"),
-  lastName: customerDetails.name,
-  displayName: customerDetails.name,
+  idType: "ACCOUNT_ID",
+  idValue: loanInfo.ACCOUNT_NUMBER,
+  idSubValue: ds.regex.regexReplace(loanInfo.MOBILE_NUMBER, "-", ""),
+  lastName: loanInfo.FULL_NAME,
+  displayName: loanInfo.FULL_NAME,
   extensionList: [
     {
         key: "mfiName",
-        value: "Hana Microfinance"
+        value: "Sathapana"
     },
     {
         key: "amountDue",
-        value: billDetails.dueDetails.dueAmount
+        value: finalamountDue
+    },
+        {
+        key: "dueDate",
+        value: finaldueDate
     },
     {
         key: "branchName",
-        value: customerDetails.officeName
+        value: loanInfo.Branch_Code + " " + loanInfo.Branch_NAME
     }
   ]
 }
+
+else
+{ "Result Empty" : "true" }
