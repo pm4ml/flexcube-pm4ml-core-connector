@@ -21,6 +21,14 @@ public class GetPartyResponseValidator implements Processor {
                 String errorCode = respObject.getJSONObject("result").getString("errorCode");
                 String errorReason = respObject.getJSONObject("result").getString("errorReason");
 
+                throw new CCCustomException(ErrorCode.getErrorResponse(
+                        ErrorCode.GENERIC_DOWNSTREAM_ERROR_PAYEE,
+                        errorReason));
+            }
+        }
+    }
+}
+/*
                if(errorCode.equals("FBF006")) {
                    throw new CloseWrittenOffAccountException(errorReason);
                } else if(errorCode.equals("FBF004")) {
@@ -34,7 +42,4 @@ public class GetPartyResponseValidator implements Processor {
                            errorReason
                    ));
                }
-            }
-        }
-    }
-}
+               */

@@ -3,10 +3,11 @@ version=2.0
 output application/json
 input payload application/json
 */
-if ds.sizeOf(payload) >0
-then
+local loanInfo = payload.data[0];
+if ds.sizeOf(payload.data) > 0 then
 
 local loanInfo = payload.data[0];
+
 local amountDueManual = loanInfo.Past_Due_Amount + loanInfo.DUE_AMOUNT;
 
 
@@ -16,33 +17,26 @@ if amountDueManual > 0 then
 else
     loanInfo.NEXT_INSTALLATION_AMOUNT;
 
-local finaldueDate =
-if amountDueManual > 0 then
-   if loanInfo.DUE_DATE > loanInfo.PAST_DUE_DATE then
-        loanInfo.DUE_DATE
-    else loanInfo.PAST_DUE_DATE
-else
-    loanInfo.NEXT_INSTALLATION_DATE;
-
+local dueAmountString = if finalamountDue >= 0 then std.toString(finalamountDue) else "";
 
 {
   idType: "ACCOUNT_ID",
   idValue: loanInfo.ACCOUNT_NUMBER,
-  idSubValue: ds.regex.regexReplace(loanInfo.MOBILE_NUMBER, "-", ""),
+  idSubValue: cml.exchangeProperty('mfiPhoneNumber'),
   lastName: loanInfo.FULL_NAME,
   displayName: loanInfo.FULL_NAME,
   extensionList: [
     {
         key: "mfiName",
-        value: "Sathapana"
+        value: cml.header("MFIName")
     },
     {
         key: "amountDue",
-        value: finalamountDue
+        value: dueAmountString
     },
-        {
+    {
         key: "dueDate",
-        value: finaldueDate
+        value: cml.exchangeProperty('mfidueDate')
     },
     {
         key: "branchName",
@@ -52,4 +46,7 @@ else
 }
 
 else
-{ "Result Empty" : "true" }
+{
+    "statusCode": "3204",
+    "message": "Party not found"
+}

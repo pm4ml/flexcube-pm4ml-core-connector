@@ -45,7 +45,7 @@ public class PartiesRouter extends RouteBuilder {
 
         exceptionHandlingConfigurer.configureExceptionHandling(this);
         //new ExceptionHandlingRouter(this);
-/*
+
         from("direct:getPartiesByIdTypeIdValue").routeId("com.modusbox.getPartiesByIdTypeIdValue").doTry()
                 .process(exchange -> {
                     reqCounter.inc(1); // increment Prometheus Counter metric
@@ -68,7 +68,7 @@ public class PartiesRouter extends RouteBuilder {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
             }).end()
         ;
-*/
+
        from("direct:getPartiesByIdTypeIdValueIdSubValue").routeId("com.modusbox.getParties").doTry()
                 .process(exchange -> {
                     reqCounter.inc(1); // increment Prometheus Counter metric
@@ -84,34 +84,28 @@ public class PartiesRouter extends RouteBuilder {
                /*
                 * BEGIN processing
                 */
-                .log("Begin processing")
-                //.process(accountNumberFormatValidator)
-                //.process(padLoanAccount)
+
+                .process(accountNumberFormatValidator)
+                .process(padLoanAccount)
                 .to("direct:getAuthHeader")
                 //.process(exchange -> exchange.setProperty("uuid", UUID.randomUUID().toString()))
                 .removeHeaders("CamelHttp*")
-                .setHeader("Content-Type", constant("application/json"))
-                .setHeader("Authorization", constant("Basic U1BOVFNBVVNFUjAyOkRlZmF1bHRAMTIz"))
+                .setHeader("MFIName", constant("{{dfsp.name}}"))
                 .setHeader(Exchange.HTTP_METHOD, constant("GET"))
-                //.setBody(simple("{}"))
+                .setHeader("Content-Type", constant("application/json"))
+                //.setBody(simple("{\"data\": []}"))
                 //.setBody(constant(null))
-               .log("Header message : ${headers}")
+
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "'Calling the " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
                         "'Request to GET {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
-                .log("Before Get Party Function")
-                .log("{{dfsp.host}}" + PATH + "?ACCOUNT_NUMBER=03700210010444")
 
+                .toD("{{dfsp.host}}" + PATH + "?ACCOUNT_NUMBER=${exchangeProperty.loanAccount}")
+                .unmarshal().json()
 
-                //.toD("{{dfsp.host}}" + PATH + "?ACCOUNT_NUMBER=03700210010444")
-                //.to("http://172.16.113.3:7090/sathapana_api_space/api/loan?ACCOUNT_NUMBER=03700210010444" + "?httpClient.authenticationPreemptive=true")
-               //.to("http://172.16.113.3:7090/sathapana_api_space/api/loan?ACCOUNT_NUMBER=03700210010444" + "?httpClient.authenticationPreemptive=true" + "?bridgeEndpoint=true")
-                 //.toD("http://172.16.113.3:7090/sathapana_api_space/api/loan?ACCOUNT_NUMBER=03700210010444")
-                       .toD("http://172.16.113.3:7090/sathapana_api_space/api/loan?ACCOUNT_NUMBER=03700210010444" + "?bridgeEndpoint=true")
-                .log("After Get Party Function")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "'Called " + PATH_NAME + "', " +
@@ -120,31 +114,28 @@ public class PartiesRouter extends RouteBuilder {
                         "'Response from GET {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
 
                 //.process(getPartyResponseValidator)
-
-                //.process(phoneNumberValidation)
+                .marshal().json()
+                .process(phoneNumberValidation)
                 .unmarshal().json()
 
-                .log("Before accept from getPartiesResponse.ds data sonnet")
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/getPartiesResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
+                .unmarshal().json()
                 //.bean("getPartiesResponse")
-                .log("${body}")
-                .log("After accept from getPartiesResponse.ds data sonnet")
-
-                //.log("${body.content}")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "'Response for GET /parties/${header.idType}/${header.idValue}', " +
+                        "'Response for GET /parties/${header.idType}/${header.idValue}/${header.idSubValue} API', " +
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
+
                /*
                 * END processing
                 */
-                .log("End processing")
+
                 .doCatch(CCCustomException.class,CloseWrittenOffAccountException.class)
                     .to("direct:extractCustomErrors")
 
