@@ -1,3 +1,6 @@
+# Unless you're building a Maven project containing child modules within the repo, it's best not to
+# copy this CI workflow. This is because the artifact is built outside of the docker runtime and
+# copied in to the docker runtime. See below for reasons/details.
 name: Publish image
 
 on:
@@ -55,6 +58,18 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
     -
+      name: Checkout repository
+      uses: actions/checkout@v2
+    # Here we build the package. Later, we copy the jar file into the built image. Don't copy this
+    # behaviour. Normally you should build your software *inside* your Dockerfile. But maven makes
+    # this exceptionally difficult when you have parent & child modules in the same repo.
+    -
+      name: Build package
+      run: mvn clean package
+    -
+      name: Test print output
+      run: tree .
+    -
       name: Build and push
       id: docker_build
       uses: docker/build-push-action@v2.2.1
@@ -62,6 +77,9 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.docker_meta.outputs.tags }}
         labels: ${{ steps.docker_meta.outputs.labels }}
+        # This tells build-push-action to use our local checkout (with our built jar artifact in
+        # it) as the build context.
+        context: .
     -
       name: Image digest
       run: echo ${{ steps.docker_build.outputs.digest }}
