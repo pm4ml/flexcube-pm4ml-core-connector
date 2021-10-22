@@ -1,3 +1,4 @@
+/*
 local quote = payload.quoteRequest.body;
 local accNumber = quote.payee.partyIdInfo.partyIdentifier;
 local transfer = payload.prepare.body;
@@ -16,4 +17,11 @@ local zeros = ds.strings.repeat("0",padLength);
         "transactionDate": DS.ZonedDateTime.now(),
         "transactionRemarks": "MMD"
     }
+}
+
+*/
+
+
+{
+    homeTransactionId: std.toString(payload.transferId)
 }
