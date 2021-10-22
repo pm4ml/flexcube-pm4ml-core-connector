@@ -16,6 +16,9 @@ public class PhoneNumberUtils {
         if(number.startsWith("+")) {
             number = number.substring(1);
         }
+        if(number.startsWith("959")) {
+            number = "09" + number.substring(3);
+        }
         if(number.startsWith("95")) {
             number = number.substring(2);
         }

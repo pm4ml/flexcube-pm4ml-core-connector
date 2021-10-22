@@ -49,6 +49,27 @@ public class CustomErrorProcessor implements Processor {
                             statusCode = String.valueOf(respObject.getInt("returnCode"));
                             errorDescription = respObject.getString("returnStatus");
                         }
+                        if(respObject.has("Message") && (e.getStatusCode() == 406 || e.getStatusCode() == 417 || e.getStatusCode() == 500)){
+                            if(e.getStatusCode() == 406){
+                                errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR));
+                                statusCode =  String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
+                                errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
+                            }
+                            if(e.getStatusCode() == 417) {
+                                errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND));
+                                statusCode = String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
+                                errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
+                            }
+                            if(e.getStatusCode() == 500){
+                                errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR));
+                                statusCode = String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
+                                errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
+                            }
+                            if(!respObject.getString("Message").isEmpty() &&  respObject.getString("Message") != null)
+                            {
+                                errorDescription = respObject.getString("Message");
+                            }
+                        }
                     }
                 } finally {
                     reasonText = "{ \"statusCode\": \"" + statusCode + "\"," +
