@@ -4,6 +4,7 @@ import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.customexception.CloseWrittenOffAccountException;
 import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import com.modusbox.client.processor.PadLoanAccount;
+import com.modusbox.client.processor.SetPropertiesLoanInfo;
 import com.modusbox.client.validator.AccountNumberFormatValidator;
 import com.modusbox.client.validator.GetPartyResponseValidator;
 import com.modusbox.client.validator.IdSubValueChecker;
@@ -18,9 +19,10 @@ import java.util.UUID;
 public class PartiesRouter extends RouteBuilder {
 
     private final PadLoanAccount padLoanAccount = new PadLoanAccount();
+    private final SetPropertiesLoanInfo setPropertiesForLoanInfo = new SetPropertiesLoanInfo();
     private final PhoneNumberValidation phoneNumberValidation = new PhoneNumberValidation();
-    private final GetPartyResponseValidator getPartyResponseValidator = new GetPartyResponseValidator();
     private final AccountNumberFormatValidator accountNumberFormatValidator = new AccountNumberFormatValidator();
+    private final GetPartyResponseValidator getPartyResponseValidator = new GetPartyResponseValidator();
 
     private final IdSubValueChecker idSubValueChecker = new IdSubValueChecker();
 
@@ -44,7 +46,6 @@ public class PartiesRouter extends RouteBuilder {
     public void configure() {
 
         exceptionHandlingConfigurer.configureExceptionHandling(this);
-        //new ExceptionHandlingRouter(this);
 
         from("direct:getPartiesByIdTypeIdValue").routeId("com.modusbox.getPartiesByIdTypeIdValue").doTry()
                 .process(exchange -> {
@@ -54,7 +55,6 @@ public class PartiesRouter extends RouteBuilder {
 
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        //"${header.X-CorrelationId}, " +
                         "'Request received GET /parties/${header.idType}/${header.idValue}', " +
                         "'Tracking the request', " +
                         "'Call the Mambu API,  Track the response', " +
@@ -76,25 +76,16 @@ public class PartiesRouter extends RouteBuilder {
                 })
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        //"${header.X-CorrelationId}, " +
                         "'Request received GET /parties/${header.idType}/${header.idValue}', " +
                         "'Tracking the request', " +
                         "'Call the " + PATH_NAME + ",  Track the response', " +
                         "'Input Payload: ${body}')") // default logger
-               /*
-                * BEGIN processing
-                */
 
                 .process(accountNumberFormatValidator)
                 .process(padLoanAccount)
                 .to("direct:getAuthHeader")
-                //.process(exchange -> exchange.setProperty("uuid", UUID.randomUUID().toString()))
-                .removeHeaders("CamelHttp*")
                 .setHeader("MFIName", constant("{{dfsp.name}}"))
                 .setHeader(Exchange.HTTP_METHOD, constant("GET"))
-                .setHeader("Content-Type", constant("application/json"))
-                //.setBody(simple("{\"data\": []}"))
-                //.setBody(constant(null))
 
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
@@ -113,8 +104,9 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "'Response from GET {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
 
-                //.process(getPartyResponseValidator)
                 .marshal().json()
+                .process(getPartyResponseValidator)
+                .process(setPropertiesForLoanInfo)
                 .process(phoneNumberValidation)
                 .unmarshal().json()
 
@@ -123,7 +115,6 @@ public class PartiesRouter extends RouteBuilder {
                 .setBody(simple("${body.content}"))
                 .marshal().json()
                 .unmarshal().json()
-                //.bean("getPartiesResponse")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "'Response for GET /parties/${header.idType}/${header.idValue}/${header.idSubValue} API', " +
@@ -131,11 +122,6 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
-
-               /*
-                * END processing
-                */
-
                 .doCatch(CCCustomException.class,CloseWrittenOffAccountException.class)
                     .to("direct:extractCustomErrors")
 

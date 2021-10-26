@@ -1,50 +1,31 @@
-/** DataSonnet
-version=2.0
-output application/json
-input payload application/json
-*/
 local loanInfo = payload.data[0];
 if ds.sizeOf(payload.data) > 0 then
-
-local loanInfo = payload.data[0];
-
-local amountDueManual = loanInfo.Past_Due_Amount + loanInfo.DUE_AMOUNT;
-
-
-local finalamountDue =
-if amountDueManual > 0 then
-    amountDueManual
-else
-    loanInfo.NEXT_INSTALLATION_AMOUNT;
-
-local dueAmountString = if finalamountDue >= 0 then std.toString(finalamountDue) else "";
-
+local dueAmount = if cml.exchangeProperty('mfidueAmount') >= 0 then std.toString(cml.exchangeProperty('mfidueAmount')) else "";
 {
   idType: "ACCOUNT_ID",
-  idValue: loanInfo.ACCOUNT_NUMBER,
-  idSubValue: cml.exchangeProperty('mfiPhoneNumber'),
+  idValue: cml.exchangeProperty('walletLoanNumber'),
+  idSubValue: cml.exchangeProperty('walletPhoneNumber'),
   lastName: loanInfo.FULL_NAME,
   displayName: loanInfo.FULL_NAME,
   extensionList: [
     {
         key: "mfiName",
-        value: cml.header("MFIName")
+        value: std.toString(cml.header("MFIName"))
     },
     {
         key: "amountDue",
-        value: dueAmountString
+        value: dueAmount
     },
     {
         key: "dueDate",
-        value: cml.exchangeProperty('mfidueDate')
+        value: std.toString(cml.exchangeProperty('mfidueDate'))
     },
     {
         key: "branchName",
-        value: loanInfo.Branch_Code + " " + loanInfo.Branch_NAME
+        value: std.toString(loanInfo.Branch_Code + " " + loanInfo.Branch_NAME)
     }
   ]
 }
-
 else
 {
     "statusCode": "3204",

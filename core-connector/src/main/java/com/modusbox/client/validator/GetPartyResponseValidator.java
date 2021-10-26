@@ -15,31 +15,12 @@ public class GetPartyResponseValidator implements Processor {
         String body = exchange.getIn().getBody(String.class);
         JSONObject respObject = new JSONObject(body);
 
-        if (respObject.has("status")) {
-            String status = respObject.getString("status");
-            if (!status.equals("SUCCESS")) {
-                String errorCode = respObject.getJSONObject("result").getString("errorCode");
-                String errorReason = respObject.getJSONObject("result").getString("errorReason");
-
-                throw new CCCustomException(ErrorCode.getErrorResponse(
-                        ErrorCode.GENERIC_DOWNSTREAM_ERROR_PAYEE,
-                        errorReason));
+        if (respObject.has("data")) {
+            if(respObject.getJSONArray("data").length()==0)
+            {
+                throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND, "Account does not exist."));
             }
         }
     }
 }
-/*
-               if(errorCode.equals("FBF006")) {
-                   throw new CloseWrittenOffAccountException(errorReason);
-               } else if(errorCode.equals("FBF004")) {
-                   throw new CCCustomException(ErrorCode.getErrorResponse(
-                           ErrorCode.GENERIC_ID_NOT_FOUND,
-                           errorReason
-                   ));
-               } else {
-                   throw new CCCustomException(ErrorCode.getErrorResponse(
-                           ErrorCode.GENERIC_DOWNSTREAM_ERROR_PAYEE,
-                           errorReason
-                   ));
-               }
-               */
+
