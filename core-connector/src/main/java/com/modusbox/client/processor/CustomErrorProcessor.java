@@ -41,7 +41,8 @@ public class CustomErrorProcessor implements Processor {
             if (exception instanceof HttpOperationFailedException) {
                 HttpOperationFailedException e = (HttpOperationFailedException) exception;
                 try {
-                    if (null != e.getResponseBody()) {
+                    String customCBSMessage = "";
+                    if (null != e.getResponseBody() && !e.getResponseBody().isEmpty()) {
                         /* Below if block needs to be changed as per the error object structure specific to
                             CBS back end API that is being integrated in Core Connector. */
                         JSONObject respObject = new JSONObject(e.getResponseBody());
@@ -49,28 +50,22 @@ public class CustomErrorProcessor implements Processor {
                             statusCode = String.valueOf(respObject.getInt("returnCode"));
                             errorDescription = respObject.getString("returnStatus");
                         }
-                        if(respObject.has("Message") && (e.getStatusCode() == 406 || e.getStatusCode() == 417 || e.getStatusCode() == 500)){
-                            if(e.getStatusCode() == 406){
-                                errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR));
-                                statusCode =  String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
-                                errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
-                            }
-                            if(e.getStatusCode() == 417) {
-                                errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND));
-                                statusCode = String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
-                                errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
-                            }
-                            if(e.getStatusCode() == 500){
-                                errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR));
-                                statusCode = String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
-                                errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
-                            }
-                            if(!respObject.getString("Message").isEmpty() &&  respObject.getString("Message") != null)
-                            {
-                                errorDescription = respObject.getString("Message");
-                            }
+                        if(respObject.has("Message")){
+                            customCBSMessage = respObject.getString("Message");
                         }
                     }
+                    if(e.getStatusCode() == 406){
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR,customCBSMessage));
+                    }
+                    if(e.getStatusCode() == 417) {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND,customCBSMessage));
+                    }
+                    if(e.getStatusCode() == 500){
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
+                    }
+                    statusCode =  String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
+                    errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
+
                 } finally {
                     reasonText = "{ \"statusCode\": \"" + statusCode + "\"," +
                             "\"message\": \"" + errorDescription + "\"} ";
@@ -101,7 +96,7 @@ public class CustomErrorProcessor implements Processor {
                             "\"message\": \"" + errorDescription + "\"} ";
                 }
             }
-                customJsonMessage.logJsonMessage("error", String.valueOf(exchange.getIn().getHeader("X-CorrelationId")),
+                customJsonMessage.logJsonMessage("error", null,
                     "Processing the exception at CustomErrorProcessor", null, null,
                     exception.getMessage());
         }

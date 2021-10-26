@@ -3,7 +3,6 @@ package com.modusbox.client.router;
 import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.customexception.CloseWrittenOffAccountException;
 import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
-import com.modusbox.client.validator.BillsPaymentResponseValidator;
 import com.modusbox.client.validator.GetSettlementAmountCheckValidator;
 import com.modusbox.client.validator.IdSubValueChecker;
 import io.prometheus.client.Counter;
@@ -16,8 +15,6 @@ public class TransfersRouter extends RouteBuilder {
 
     private static final String TIMER_NAME_POST = "histogram_post_transfers_timer";
     private static final String TIMER_NAME_PUT = "histogram_put_transfers_timer";
-
-    private final BillsPaymentResponseValidator billsPaymentResponseValidator = new BillsPaymentResponseValidator();
 
     public static final Counter reqCounterPost = Counter.build()
             .name("counter_post_transfers_requests_total")
@@ -39,8 +36,6 @@ public class TransfersRouter extends RouteBuilder {
             .help("Request latency in seconds for PUT /transfers.")
             .register();
 
-    private final String PATH_NAME_PUT = "Finflux Bill Payment Direct Process API";
-    private final String PATH_NAME_POST = "Flexcube hardcoded postTransfer response";
     private final String Post_Repayment_PATH = "/loan";
     private final String Check_Settlement_Amount_PATH = "/balance?ACCOUNT_NUMBER=";
 
@@ -50,7 +45,6 @@ public class TransfersRouter extends RouteBuilder {
     public void configure() {
 
         exceptionHandlingConfigurer.configureExceptionHandling(this);
-        //new ExceptionHandlingRouter(this);
 
         from("direct:postTransfers").routeId("com.modusbox.postTransfers").doTry()
                 .process(exchange -> {
@@ -66,9 +60,6 @@ public class TransfersRouter extends RouteBuilder {
                 /*
                  * BEGIN processing
                  */
-
-                .removeHeaders("CamelHttp*")
-
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/postTransfersRequest.ds"))
                 .setProperty("mfiLoanAccountNo",simple("${body.content.get('mfiLoanAccountNo')}"))
@@ -78,6 +69,8 @@ public class TransfersRouter extends RouteBuilder {
                 .setProperty("makerUserID",simple("{{dfsp.username}}"))
                 .setProperty("mfiOfficeName",simple("${body.content.get('mfiOfficeName')}"))
                 .setProperty("walletFspId",simple("${body.content.get('walletFspId')}"))
+                .setProperty("mfiSetlledGL",simple("${body.content.get('mfiSetlledGL')}"))
+
 
                 .setBody(simple("${body.content}"))
                 .marshal().json()
@@ -86,7 +79,6 @@ public class TransfersRouter extends RouteBuilder {
                 .to("direct:checkSettlementAmount")
 
                 // Validation for GetSettlementAmountCheckValidator
-                //.process(settlementAmountCheckvalidator)
 
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/postTransfersRepaymentRequest.ds"))
@@ -95,10 +87,11 @@ public class TransfersRouter extends RouteBuilder {
                 .unmarshal().json()
 
                 // Do repayment process if above step is ok.
-                //.marshal().json()
+                .marshal().json()
                 .to("direct:postLoanRepayment")
 
                 // Error handling case after doing post transfer
+
                 /*
                  * END processing
                  */
@@ -131,9 +124,7 @@ public class TransfersRouter extends RouteBuilder {
 
         from("direct:postLoanRepayment")
                 .to("direct:getAuthHeader")
-                .setHeader("Content-Type", constant("application/json"))
                 .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-                .removeHeaders("CamelHttp*")
                 .log("Request body : ${body}")
                 .toD("{{dfsp.host}}"+ Post_Repayment_PATH)
                 .unmarshal().json()

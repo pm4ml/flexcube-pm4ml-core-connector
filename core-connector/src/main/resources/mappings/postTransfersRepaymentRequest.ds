@@ -1,27 +1,15 @@
-/** DataSonnet
-version=2.0
-output application/json
-input payload application/json
-*/
-
 local responseMessage =  payload.Message;
-local settledGL = "296700101";
 local accountNumber = cml.exchangeProperty('mfiLoanAccountNo');
 local makerUserID =cml.exchangeProperty('makerUserID');
 local settledAmount = cml.exchangeProperty('transactionAmount');
-local officeName = cml.exchangeProperty('mfiOfficeName');
-local transactionID = std.split(std.toString(officeName), " ");
-local transferIDValue =  cml.exchangeProperty('transferID');
-local splitTransferID = std.split(std.toString(transferIDValue), "-");
-local external_account_name = std.toString(splitTransferID[0] + " " + cml.exchangeProperty('walletFspId'));
-
+local transferIDValue =  ds.strings.substringBefore(cml.exchangeProperty('transferID'), "-");
+local external_account_name = std.toString(transferIDValue + " " + ds.strings.withMaxSize(cml.exchangeProperty('walletFspId'), 22));
 
 if(ds.contains(responseMessage, "Yes")  && ds.sizeOf(payload.Message) > 0)  then
 {
-    "external_account_name":std.toString(external_account_name),
     "TransactionID":std.toString(external_account_name),
     "MakerUserID":std.toString(makerUserID),
     "AccountNumber": std.toString(accountNumber),
     "SettledAmount":settledAmount,
-    "SetlledGL": std.toString(settledGL)
+    "SetlledGL": std.toString(cml.exchangeProperty('mfiSetlledGL'))
 }

@@ -2,12 +2,15 @@ local hasBranchName = if (std.objectHas(payload.to, "extensionList")) then
 std.filter(function(extension) std.objectHas(extension, "key") && extension.key == "branchName", payload.to.extensionList) else [];
 local branchName = if (hasBranchName != []) then hasBranchName[0].value else "";
 local settledGL = "296700101";
-local loanAccountNo =payload.to.idValue;
+local loanAccountNo =std.substr(payload.to.idValue,3,14);
+
+local sourceWallet = if (payload.from.fspId != null) then std.toString(payload.from.fspId) else "";
+local amount = if (payload.amount != null) then std.toString(payload.amount) else "0";
 
 {
     "quoteId": payload.quote.quoteId,
     "transactionId":  payload.quote.transactionId,
-    "transactionAmount": payload.amount,
+    "transactionAmount": amount,
     "transactionDate": ds.datetime.now(),
     "transferID": payload.transferId,
 
@@ -18,6 +21,6 @@ local loanAccountNo =payload.to.idValue;
     "mfiOfficeName" : branchName,
 
     "walletNo" :payload.from.idValue,
-    "walletFspId" : payload.from.fspId,
+    "walletFspId" : sourceWallet,
     "walletType" : payload.from.idType,
 }
