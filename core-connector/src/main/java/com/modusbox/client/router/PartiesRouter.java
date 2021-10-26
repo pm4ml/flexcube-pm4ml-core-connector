@@ -123,7 +123,7 @@ public class PartiesRouter extends RouteBuilder {
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
                 .doCatch(CCCustomException.class,CloseWrittenOffAccountException.class)
-                    .to("direct:extractCustomErrors")
+                .to("direct:extractCustomErrors")
 
                 .doFinally().process(exchange -> {
             ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric

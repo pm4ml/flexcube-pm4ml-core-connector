@@ -18,14 +18,14 @@ public class SetPropertiesLoanInfo implements Processor {
         String body = exchange.getIn().getBody(String.class);
 
         JSONObject loanDetails = new JSONObject(body);
-        String dueDate=null;
+        String currentDueDate=null;
         String pastdueDate=null;
         String nextinstallationDate =null;
 
         if(loanDetails.getJSONArray("data").length()>0)
         {
             if(!loanDetails.getJSONArray("data").getJSONObject(0).isNull("DUE_DATE"))
-                dueDate = loanDetails.getJSONArray("data").getJSONObject(0).getString("DUE_DATE");
+                currentDueDate = loanDetails.getJSONArray("data").getJSONObject(0).getString("DUE_DATE");
 
             if(!loanDetails.getJSONArray("data").getJSONObject(0).isNull("PAST_DUE_DATE"))
                 pastdueDate = loanDetails.getJSONArray("data").getJSONObject(0).getString("PAST_DUE_DATE");
@@ -41,16 +41,21 @@ public class SetPropertiesLoanInfo implements Processor {
             Date finalDueDate = new Date();
             Integer finalDueAmount = 0;
 
-            if(!dueAmount.equals(0) || !pastdueAmount.equals(0))
+            if(dueAmount > 0 || pastdueAmount > 0)
             {
-                if(pastdueDate == null && dueDate != null)
+                if(pastdueDate == null && currentDueDate != null)
                 {
-                    finalDueDate = dateFormatter.parse(dueDate);
+                    finalDueDate = dateFormatter.parse(currentDueDate);
                 }
-                if(pastdueDate != null && dueDate == null)
+                if(pastdueDate != null && currentDueDate == null)
                 {
                     finalDueDate = dateFormatter.parse(pastdueDate);
                 }
+                 if(pastdueDate != null && currentDueDate != null)
+                {
+                    finalDueDate = dateFormatter.parse(currentDueDate);
+                }
+
                 finalDueAmount = dueAmount + pastdueAmount;
             }
             else
