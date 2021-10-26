@@ -32,8 +32,8 @@ public class QuotesRouter extends RouteBuilder {
                     reqCounter.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME, reqLatency.startTimer()); // initiate Prometheus Histogram metric
                 })
+                .to("direct:getAuthHeader")
                 .process(exchange -> System.out.println("Starting POST Quotes API called*****"))
-
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "'Request received POST /quoterequests', " +
@@ -44,14 +44,11 @@ public class QuotesRouter extends RouteBuilder {
                  * BEGIN processing
                  */
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(200))
-                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/postQuoterequestsResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
 
-                //.bean("postQuoterequestsResponse")
                 /*
                  * END processing
                  */
