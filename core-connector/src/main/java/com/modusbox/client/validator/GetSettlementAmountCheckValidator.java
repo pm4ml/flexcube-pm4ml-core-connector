@@ -7,7 +7,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.json.JSONObject;
 
-public class BillsPaymentResponseValidator implements Processor {
+public class GetSettlementAmountCheckValidator implements Processor {
     @Override
     public void process(Exchange exchange) throws Exception {
         String body = exchange.getIn().getBody(String.class);
@@ -15,23 +15,23 @@ public class BillsPaymentResponseValidator implements Processor {
 
         if (respObject.has("status")) {
             String status = respObject.getString("status");
-            if (!status.equals("SUCCESS")) {
+            if (!status.equals("OK")) {
                 String errorCode = respObject.getJSONObject("result").getString("errorCode");
                 String errorReason = respObject.getJSONObject("result").getString("errorReason");
-                if(errorCode.equals("FBFE001")) {
-                    throw new CCCustomException(ErrorCode.getErrorResponse(
-                            ErrorCode.PAYER_FSP_ID_NOT_FOUND,
-                            errorReason
-                    ));
-                } else if(errorCode.equals("FBF002")) {
-
-                    throw new CCCustomException(ErrorCode.getErrorResponse(
-                            ErrorCode.DUPLICATE_REFERENCE_ID,
-                            errorReason
-                    ));
-                } else if(errorCode.equals("FBP009")) {
+                if(errorCode.equals("406")) {
                     throw new CCCustomException(ErrorCode.getErrorResponse(
                             ErrorCode.PAYEE_LIMIT_ERROR,
+                            errorReason
+                    ));
+                } else if(errorCode.equals("417")) {
+
+                    throw new CCCustomException(ErrorCode.getErrorResponse(
+                            ErrorCode.GENERIC_ID_NOT_FOUND,
+                            errorReason
+                    ));
+                } else if(errorCode.equals("500")) {
+                    throw new CCCustomException(ErrorCode.getErrorResponse(
+                            ErrorCode.INTERNAL_SERVER_ERROR,
                             errorReason
                     ));
                 } else {
@@ -40,6 +40,15 @@ public class BillsPaymentResponseValidator implements Processor {
                             errorReason
                     ));
                 }
+            }
+            else
+            {
+                //Get mfi TransactionID
+                String loanAccountNo = respObject.getString("mfiLoanAccountNo");
+                String mfiTransactionID = "";
+                mfiTransactionID =loanAccountNo.substring(0,3);
+                exchange.setProperty("TransactionID", mfiTransactionID);
+
             }
         }
     }

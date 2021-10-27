@@ -1,24 +1,33 @@
-local customerDetails = payload.result.customerDetails;
-local billDetails = payload.result.billDetails;
-
+local loanInfo = payload.data[0];
+if ds.sizeOf(payload.data) > 0 then
+local dueAmount = if cml.exchangeProperty('mfidueAmount') >= 0 then std.toString(cml.exchangeProperty('mfidueAmount')) else "";
 {
-  idType: cml.header("idType"),
-  idValue: cml.header("idValue"),
-  idSubValue: cml.header("idSubValue"),
-  lastName: customerDetails.name,
-  displayName: customerDetails.name,
+  idType: "ACCOUNT_ID",
+  idValue: cml.exchangeProperty('walletLoanNumber'),
+  idSubValue: cml.exchangeProperty('walletPhoneNumber'),
+  lastName: loanInfo.FULL_NAME,
+  displayName: loanInfo.FULL_NAME,
   extensionList: [
     {
         key: "mfiName",
-        value: "Hana Microfinance"
+        value: std.toString(cml.header("MFIName"))
     },
     {
         key: "amountDue",
-        value: billDetails.dueDetails.dueAmount
+        value: dueAmount
+    },
+    {
+        key: "dueDate",
+        value: std.toString(cml.exchangeProperty('mfidueDate'))
     },
     {
         key: "branchName",
-        value: customerDetails.officeName
+        value: std.toString(loanInfo.Branch_Code + " " + loanInfo.Branch_NAME)
     }
   ]
+}
+else
+{
+    "statusCode": "3204",
+    "message": "Party not found"
 }

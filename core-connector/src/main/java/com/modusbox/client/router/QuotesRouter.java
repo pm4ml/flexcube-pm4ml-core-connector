@@ -32,9 +32,10 @@ public class QuotesRouter extends RouteBuilder {
                     reqCounter.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME, reqLatency.startTimer()); // initiate Prometheus Histogram metric
                 })
+                .to("direct:getAuthHeader")
+                .process(exchange -> System.out.println("Starting POST Quotes API called*****"))
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Request received POST /quoterequests', " +
                         "'Tracking the request', " +
                         "'Track the response', " +
@@ -43,24 +44,22 @@ public class QuotesRouter extends RouteBuilder {
                  * BEGIN processing
                  */
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(200))
-                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-
                 .marshal().json()
-                .transform(datasonnet("resource:classpath:mappings/postQuoterequestsResponseMock.ds"))
+                .transform(datasonnet("resource:classpath:mappings/postQuoterequestsResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
 
-                //.bean("postQuoterequestsResponseMock")
                 /*
                  * END processing
                  */
+
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Response for POST /quoterequests', " +
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')")
+                .process(exchange -> System.out.println("Ending POST Quotes API called*****"))
                 .removeHeaders("*", "X-*")
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric

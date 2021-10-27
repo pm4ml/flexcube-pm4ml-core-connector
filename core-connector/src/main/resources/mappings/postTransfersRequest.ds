@@ -1,30 +1,26 @@
-//local formatDate(dateStr) = DS.ZonedDateTime.format(dateStr, "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSVV", "yyyy-MM-dd'T'HH:mm:ss.SSSVV");
+local hasBranchName = if (std.objectHas(payload.to, "extensionList")) then
+std.filter(function(extension) std.objectHas(extension, "key") && extension.key == "branchName", payload.to.extensionList) else [];
+local branchName = if (hasBranchName != []) then hasBranchName[0].value else "";
+local settledGL = "296700101";
+local loanAccountNo =std.substr(payload.to.idValue,3,14);
 
-local hasChannelReferenceId = if (std.objectHas(payload.to, "extensionList")) then
-std.filter(function(extension) std.objectHas(extension, "key") && extension.key == "channelReferenceId", payload.to.extensionList) else [];
-local channelReferenceId = if (hasChannelReferenceId != []) then hasChannelReferenceId[0].value else "";
-
-//local hasBillerReferenceFilter(obj) = std.objectHas(obj, "key") && obj.key == "billerReferenceId";
-local hasBillerReference = if (std.objectHas(payload.to, "extensionList")) then
-std.filter(function(extension) std.objectHas(extension, "key") && extension.key == "billerReferenceId", payload.to.extensionList) else [];
-local billerReferenceId = if (hasBillerReference != []) then hasBillerReference[0].value else "";
-
-//local hasBillerReferenceId2 = if (std.objectHas(payload.to, "extensionList")) then [{
-//  [if (std.objectHas(extension, "key") && extension.key == "billerReferenceId")
-//  then "billerReferenceId"]: extension.value
-//} for extension in payload.to.extensionList] else [];
-//local billerReferenceId2 = if (hasBillerReferenceId2 != []) then hasBillerReferenceId2[0].billerReferenceId else "";
+local sourceWallet = if (payload.from.fspId != null) then std.toString(payload.from.fspId) else "";
+local amount = if (payload.amount != null) then std.toString(payload.amount) else "0";
 
 {
-  "channelReferenceId": channelReferenceId,
-  "billerReferenceId": billerReferenceId,
-//  "billerReferenceId2": billerReferenceId2,
-  "channelPaymentDetails": {
-    "paymentTransactionId": payload.transferId,
-    "transactionAmount": std.parseJson(payload.amount),
-    "transactionStatus": "SUCCESS",
-    "transactionDate": exchangeProperty.timeStamp,
-    [if (std.objectHas(payload, "note") && payload.note != null)
-     then "transactionRemarks"]: payload.note
-  }
+    "quoteId": payload.quote.quoteId,
+    "transactionId":  payload.quote.transactionId,
+    "transactionAmount": amount,
+    "transactionDate": ds.datetime.now(),
+    "transferID": payload.transferId,
+
+    "mfiLoanAccountNo" : loanAccountNo,
+    "mfiType" : payload.to.idType,
+    "mfiFspId" : payload.to.fspId,
+    "mfiSetlledGL" : settledGL,
+    "mfiOfficeName" : branchName,
+
+    "walletNo" :payload.from.idValue,
+    "walletFspId" : sourceWallet,
+    "walletType" : payload.from.idType,
 }

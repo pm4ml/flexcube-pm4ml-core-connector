@@ -1,0 +1,15 @@
+local responseMessage =  payload.Message;
+local accountNumber = cml.exchangeProperty('mfiLoanAccountNo');
+local makerUserID =cml.exchangeProperty('makerUserID');
+local settledAmount = cml.exchangeProperty('transactionAmount');
+local transferIDValue =  ds.strings.substringBefore(cml.exchangeProperty('transferID'), "-");
+local external_account_name = std.toString(ds.strings.withMaxSize(cml.exchangeProperty('walletFspId'), 24)  + " " + transferIDValue);
+
+if(ds.contains(responseMessage, "Yes")  && ds.sizeOf(payload.Message) > 0)  then
+{
+    "TransactionID":std.toString(external_account_name),
+    "MakerUserID":std.toString(makerUserID),
+    "AccountNumber": std.toString(accountNumber),
+    "SettledAmount":settledAmount,
+    "SetlledGL": std.toString(cml.exchangeProperty('mfiSetlledGL'))
+}

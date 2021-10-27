@@ -3,7 +3,8 @@ package com.modusbox.client.router;
 import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.customexception.CloseWrittenOffAccountException;
 import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
-import com.modusbox.client.validator.BillsPaymentResponseValidator;
+import com.modusbox.client.validator.GetSettlementAmountCheckValidator;
+import com.modusbox.client.validator.IdSubValueChecker;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -11,13 +12,9 @@ import org.apache.camel.builder.RouteBuilder;
 
 public class TransfersRouter extends RouteBuilder {
 
-    //private final String PATH_NAME_POST = "Finflux hardcoded postTransfer response";
-    //private final String PATH = "/v1/paymentgateway/billerpayments/advance-fetch";
 
     private static final String TIMER_NAME_POST = "histogram_post_transfers_timer";
     private static final String TIMER_NAME_PUT = "histogram_put_transfers_timer";
-
-    private final BillsPaymentResponseValidator billsPaymentResponseValidator = new BillsPaymentResponseValidator();
 
     public static final Counter reqCounterPost = Counter.build()
             .name("counter_post_transfers_requests_total")
@@ -39,16 +36,15 @@ public class TransfersRouter extends RouteBuilder {
             .help("Request latency in seconds for PUT /transfers.")
             .register();
 
-    private final String PATH_NAME_PUT = "Finflux Bill Payment Direct Process API";
-    private final String PATH = "/v1/paymentgateway/billerpayments/process-direct?paymentType=Mojaloop";
-    private final String PATH2 = "/v1/paymentgateway/billerpayments/process-direct?paymentType=";
+    private final String Post_Repayment_PATH = "/loan";
+    private final String Check_Settlement_Amount_PATH = "/balance?ACCOUNT_NUMBER=";
 
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
+    private final GetSettlementAmountCheckValidator settlementAmountCheckvalidator = new GetSettlementAmountCheckValidator();
 
     public void configure() {
 
         exceptionHandlingConfigurer.configureExceptionHandling(this);
-        //new ExceptionHandlingRouter(this);
 
         from("direct:postTransfers").routeId("com.modusbox.postTransfers").doTry()
                 .process(exchange -> {
@@ -57,42 +53,93 @@ public class TransfersRouter extends RouteBuilder {
                 })
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Request received POST /transfers', " +
                         "'Tracking the request', " +
                         "'Track the response', " +
-                        //"'Call the " + PATH_NAME_POST + ",  Track the response', " +
                         "'Input Payload: ${body}')") // default logger
                 /*
                  * BEGIN processing
                  */
+                .marshal().json()
+                .transform(datasonnet("resource:classpath:mappings/postTransfersRequest.ds"))
+                .setProperty("mfiLoanAccountNo",simple("${body.content.get('mfiLoanAccountNo')}"))
+                .setProperty("transactionAmount",simple("${body.content.get('transactionAmount')}"))
+                .setProperty("transactionId",simple("${body.content.get('transactionId')}"))
+                .setProperty("transferID",simple("${body.content.get('transferID')}"))
+                .setProperty("makerUserID",simple("{{dfsp.username}}"))
+                .setProperty("mfiOfficeName",simple("${body.content.get('mfiOfficeName')}"))
+                .setProperty("walletFspId",simple("${body.content.get('walletFspId')}"))
+                .setProperty("mfiSetlledGL",simple("${body.content.get('mfiSetlledGL')}"))
 
-                .removeHeaders("Camel*")
-                /*
-                .marshal().json(JsonLibrary.Gson)
-                //.bean("postTransfersResponse")
-                .transform(datasonnet("resource:classpath:mappings/postTransfersResponse.ds"))
+
                 .setBody(simple("${body.content}"))
                 .marshal().json()
+                .log("postTransfersRequest : ${body}")
+                // Checked the settlement amount for over paid before repayment process
+                .to("direct:checkSettlementAmount")
 
-                 */
+                // Validation for GetSettlementAmountCheckValidator
+
+                .marshal().json()
+                .transform(datasonnet("resource:classpath:mappings/postTransfersRepaymentRequest.ds"))
+                .setBody(simple("${body.content}"))
+                .marshal().json()
+                .unmarshal().json()
+
+                // Do repayment process if above step is ok.
+                .marshal().json()
+                .to("direct:postLoanRepayment")
+
+                // Error handling case after doing post transfer
+
                 /*
                  * END processing
                  */
 
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Response for POST /transfers', " +
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
-                //.setBody(constant(null))
+
                 .removeHeaders("*", "X-*")
+                .doCatch(CCCustomException.class)
+                .to("direct:extractCustomErrors")
                 .doFinally().process(exchange -> {
-            ((Histogram.Timer) exchange.getProperty(TIMER_NAME_POST)).observeDuration(); // stop Prometheus Histogram metric
-        }).end()
+                    ((Histogram.Timer) exchange.getProperty(TIMER_NAME_POST)).observeDuration(); // stop Prometheus Histogram metric
+                }).end()
         ;
+
+
+        from("direct:checkSettlementAmount")
+                .to("direct:getAuthHeader")
+                .setHeader(Exchange.HTTP_METHOD, constant("GET"))
+                .toD("{{dfsp.host}}"+ Check_Settlement_Amount_PATH +"${exchangeProperty.mfiLoanAccountNo}&SETTLED_AMOUNT=${exchangeProperty.transactionAmount}")
+                .unmarshal().json()
+                .to("bean:customJsonMessage?method=logJsonMessage('info',  " +
+                        "'Response from Flexcube Loan API with AccountId, ${body}', " +
+                        "'Tracking the settlement amount response', 'Verify the response', null)")
+        ;
+
+        from("direct:postLoanRepayment")
+                .to("direct:getAuthHeader")
+                .setHeader(Exchange.HTTP_METHOD, constant("POST"))
+                .log("Request body : ${body}")
+                .toD("{{dfsp.host}}"+ Post_Repayment_PATH)
+                .unmarshal().json()
+
+                .to("bean:customJsonMessage?method=logJsonMessage('info', " +
+                        "'Response from Flexcube Loan API with AccountId, ${body}', " +
+                        "'Tracking the clientInfo response', 'Verify the response', null)")
+
+                .marshal().json()
+                .transform(datasonnet("resource:classpath:mappings/postTransfersResponse.ds"))
+                .setBody(simple("${body.content}"))
+                .marshal().json()
+                .unmarshal().json()
+        ;
+
 
         from("direct:putTransfersByTransferId").routeId("com.modusbox.putTransfers").doTry()
                 .process(exchange -> {
@@ -101,72 +148,19 @@ public class TransfersRouter extends RouteBuilder {
                 })
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Request received PUT /transfers', " +
                         "'Tracking the request', " +
-                        "'Call the " + PATH_NAME_PUT + ",  Track the response', " +
+                        "'Call the PUT /transfers,  Track the response', " +
                         "'Input Payload: ${body}')") // default logger
 
-                /*
-                 * BEGIN processing
-                 */
-                .to("direct:getAuthHeader")
-                .removeHeaders("Camel*")
-                .setHeader("Fineract-Platform-TenantId", constant("{{dfsp.tenant-id}}"))
-                .setHeader("Content-Type", constant("application/json"))
-                .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-
-
-                .marshal().json()
-
-                //.process(padLoanAccount)
-
-                .transform(datasonnet("resource:classpath:mappings/putTransfersRequest.ds"))
-
-                .setProperty("fspId",simple("${body.content.get('fspId')}"))
-                .setBody(simple("${body.content}"))
-                .marshal().json()
-                .to("bean:customJsonMessage?method=logJsonMessage(" +
-                        "'info', " +
-                        "${header.X-CorrelationId}, " +
-                        "'Calling the " + PATH_NAME_PUT + "', " +
-                        "null, " +
-                        "null, " +
-                        "'Request to POST {{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}, IN Payload: ${body} IN Headers: ${headers}')")
-
-                .toD("{{dfsp.host}}" + PATH2 + "${exchangeProperty.fspId}")
-
-                .process(billsPaymentResponseValidator)
-
-                .to("bean:customJsonMessage?method=logJsonMessage(" +
-                        "'info', " +
-                        "${header.X-CorrelationId}, " +
-                        "'Called " + PATH_NAME_PUT + "', " +
-                        "null, " +
-                        "null, " +
-                        "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
-
-                .transform(datasonnet("resource:classpath:mappings/putTransfersResponse.ds"))
-                .setBody(simple("${body.content}"))
-                .marshal().json()
-                /*
-                 * END processing
-                 */
-                .to("bean:customJsonMessage?method=logJsonMessage(" +
-                        "'info', " +
-                        "${header.X-CorrelationId}, " +
-                        "'Response for PUT /transfers', " +
-                        "'Tracking the response', " +
-                        "null, " +
-                        "'Output Payload: empty')") // default logger
                 .removeHeaders("*", "X-*")
 
                 .doCatch(CCCustomException.class)
-                    .to("direct:extractCustomErrors")
+                .to("direct:extractCustomErrors")
 
                 .doFinally().process(exchange -> {
-            ((Histogram.Timer) exchange.getProperty(TIMER_NAME_PUT)).observeDuration(); // stop Prometheus Histogram metric
-        }).end()
+                    ((Histogram.Timer) exchange.getProperty(TIMER_NAME_PUT)).observeDuration(); // stop Prometheus Histogram metric
+                }).end()
         ;
 
     }

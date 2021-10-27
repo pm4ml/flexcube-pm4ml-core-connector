@@ -4,6 +4,7 @@ import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.customexception.CloseWrittenOffAccountException;
 import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import com.modusbox.client.processor.PadLoanAccount;
+import com.modusbox.client.processor.SetPropertiesLoanInfo;
 import com.modusbox.client.validator.AccountNumberFormatValidator;
 import com.modusbox.client.validator.GetPartyResponseValidator;
 import com.modusbox.client.validator.IdSubValueChecker;
@@ -18,9 +19,10 @@ import java.util.UUID;
 public class PartiesRouter extends RouteBuilder {
 
     private final PadLoanAccount padLoanAccount = new PadLoanAccount();
+    private final SetPropertiesLoanInfo setPropertiesForLoanInfo = new SetPropertiesLoanInfo();
     private final PhoneNumberValidation phoneNumberValidation = new PhoneNumberValidation();
-    private final GetPartyResponseValidator getPartyResponseValidator = new GetPartyResponseValidator();
     private final AccountNumberFormatValidator accountNumberFormatValidator = new AccountNumberFormatValidator();
+    private final GetPartyResponseValidator getPartyResponseValidator = new GetPartyResponseValidator();
 
     private final IdSubValueChecker idSubValueChecker = new IdSubValueChecker();
 
@@ -36,15 +38,14 @@ public class PartiesRouter extends RouteBuilder {
             .help("Request latency in seconds for GET /parties.")
             .register();
 
-    private final String PATH_NAME = "Finflux Advance Fetch Due API";
-    private final String PATH = "/v1/paymentgateway/billerpayments/advance-fetch";
+    private final String PATH_NAME = "Flexcube Advance Fetch Due API";
+    private final String PATH = "/loan";
 
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
 
     public void configure() {
 
         exceptionHandlingConfigurer.configureExceptionHandling(this);
-        //new ExceptionHandlingRouter(this);
 
         from("direct:getPartiesByIdTypeIdValue").routeId("com.modusbox.getPartiesByIdTypeIdValue").doTry()
                 .process(exchange -> {
@@ -54,14 +55,11 @@ public class PartiesRouter extends RouteBuilder {
 
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Request received GET /parties/${header.idType}/${header.idValue}', " +
                         "'Tracking the request', " +
                         "'Call the Mambu API,  Track the response', " +
                         "'Input Payload: ${body}')") // default logger
-                /*
-                 * BEGIN processing
-                 */
+
                 .process(idSubValueChecker)
 
                 .doCatch(CCCustomException.class)
@@ -71,82 +69,69 @@ public class PartiesRouter extends RouteBuilder {
             }).end()
         ;
 
-        from("direct:getPartiesByIdTypeIdValueIdSubValue").routeId("com.modusbox.getParties").doTry()
+       from("direct:getPartiesByIdTypeIdValueIdSubValue").routeId("com.modusbox.getParties").doTry()
                 .process(exchange -> {
                     reqCounter.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME, reqLatency.startTimer()); // initiate Prometheus Histogram metric
                 })
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Request received GET /parties/${header.idType}/${header.idValue}', " +
                         "'Tracking the request', " +
                         "'Call the " + PATH_NAME + ",  Track the response', " +
                         "'Input Payload: ${body}')") // default logger
-                /*
-                 * BEGIN processing
-                 */
+
                 .process(accountNumberFormatValidator)
                 .process(padLoanAccount)
                 .to("direct:getAuthHeader")
-                .process(exchange -> exchange.setProperty("uuid", UUID.randomUUID().toString()))
-                .removeHeaders("Camel*")
-                .setHeader("Fineract-Platform-TenantId", constant("{{dfsp.tenant-id}}"))
-                .setHeader("Content-Type", constant("application/json"))
-                .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-                .setBody(constant(null))
+                .setHeader("MFIName", constant("{{dfsp.name}}"))
+                .setHeader(Exchange.HTTP_METHOD, constant("GET"))
 
-                .marshal().json()
-                .transform(datasonnet("resource:classpath:mappings/getPartiesRequest.ds"))
-                .setBody(simple("${body.content}"))
-                .marshal().json()
-                //.bean("getPartiesRequest")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Calling the " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
-                        "'Request to POST {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
+                        "'Request to GET {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
 
-                .toD("{{dfsp.host}}" + PATH)
-                //.marshal().json()
+                .toD("{{dfsp.host}}" + PATH + "?ACCOUNT_NUMBER=${exchangeProperty.loanAccount}")
+                .unmarshal().json()
+
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
                         "'Called " + PATH_NAME + "', " +
                         "null, " +
                         "null, " +
-                        "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
-                .process(getPartyResponseValidator)
+                        "'Response from GET {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
 
+                .marshal().json()
+                .process(getPartyResponseValidator)
+                .process(setPropertiesForLoanInfo)
                 .process(phoneNumberValidation)
                 .unmarshal().json()
-
 
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/getPartiesResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
-                //.bean("getPartiesResponse")
-                /*
-                 * END processing
-                 */
+                .unmarshal().json()
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "${header.X-CorrelationId}, " +
-                        "'Response for GET /parties/${header.idType}/${header.idValue}', " +
+                        "'Response for GET /parties/${header.idType}/${header.idValue}/${header.idSubValue} API', " +
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
-
                 .doCatch(CCCustomException.class,CloseWrittenOffAccountException.class)
-                    .to("direct:extractCustomErrors")
+                .to("direct:extractCustomErrors")
 
                 .doFinally().process(exchange -> {
             ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
         }).end()
         ;
+
+
+
+
     }
 }

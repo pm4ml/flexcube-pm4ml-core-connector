@@ -15,7 +15,7 @@ camel:
   component: jetty
   springboot:
     main-run-controller: true
-    name: finflux-pm4ml-core-connector
+    name: flexcube-pm4ml-core-connector
     stream-caching-enabled: true
 
 ### IMPORTANT: the below properties are here for development reference purpose

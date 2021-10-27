@@ -1,4 +1,4 @@
-# finflux-pm4ml-core-connector
+# flexcube-pm4ml-core-connector
 
 Most of the content details and instructions about development and deployment can be found into 
 the main [template project](https://github.com/pm4ml/template-rest-pm4ml-core-connector). 

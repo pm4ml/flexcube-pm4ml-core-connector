@@ -3,16 +3,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>finflux-pm4ml-core-connector</artifactId>
+        <artifactId>flexcube-pm4ml-core-connector</artifactId>
         <groupId>com.modusbox</groupId>
         <version>1.2.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>core-connector-interface</artifactId>
-    <name>Finflux Core Connector :: Interface</name>
+    <name>Flexcube Core Connector :: Interface</name>
     <description>
-        Interface Definitions for the Finflux scheme adapter API.
+        Interface Definitions for the Flexcube scheme adapter API.
         Contains model objects and java interfaces, with no logic and minimal external dependencies.
     </description>
 
