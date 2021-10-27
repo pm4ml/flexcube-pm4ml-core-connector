@@ -43,19 +43,14 @@ public class SetPropertiesLoanInfo implements Processor {
 
             if(dueAmount > 0 || pastdueAmount > 0)
             {
-                if(pastdueDate == null && currentDueDate != null)
+                if(currentDueDate != null && dueAmount > 0)
                 {
                     finalDueDate = dateFormatter.parse(currentDueDate);
                 }
-                if(pastdueDate != null && currentDueDate == null)
+                else
                 {
                     finalDueDate = dateFormatter.parse(pastdueDate);
                 }
-                 if(pastdueDate != null && currentDueDate != null)
-                {
-                    finalDueDate = dateFormatter.parse(currentDueDate);
-                }
-
                 finalDueAmount = dueAmount + pastdueAmount;
             }
             else
