@@ -3,6 +3,7 @@ package com.modusbox.client.validator;
 
 import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.enums.ErrorCode;
+import com.modusbox.client.utils.DataFormatUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
@@ -14,15 +15,22 @@ public class AccountNumberFormatValidator implements Processor {
     public void process(Exchange exchange) throws Exception {
         String idType = (String) exchange.getIn().getHeader("idType");
         String loanAccount;
-        if(idType.equalsIgnoreCase("ACCOUNT_ID")) {
-            loanAccount = (String) exchange.getIn().getHeader("idValue");
-            String regex = exchange.getProperty("ACCOUNT_NUMBER", "[0-9]+", String.class);
-            Pattern pattern = Pattern.compile(regex);
+        String phoneNumber;
 
-            if(!pattern.matcher(loanAccount).matches()) {
+        if(idType.equalsIgnoreCase("ACCOUNT_ID")) {
+            //Valid the loan account number is digit
+            loanAccount = (String) exchange.getIn().getHeader("idValue");
+            if(!DataFormatUtils.isOnlyDigits(loanAccount)) {
                 throw new CCCustomException(ErrorCode.getErrorResponse(
                         ErrorCode.MALFORMED_SYNTAX,
                         "Invalid Account Number Format"));
+            }
+            //Valid the phone number is digit
+            phoneNumber = (String) exchange.getIn().getHeader("idSubValue");
+            if(!DataFormatUtils.isOnlyDigits(phoneNumber)) {
+                throw new CCCustomException(ErrorCode.getErrorResponse(
+                        ErrorCode.MALFORMED_SYNTAX,
+                        "Invalid Phone Number Format"));
             }
         }
     }

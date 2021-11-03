@@ -16,10 +16,12 @@ public class GetPartyResponseValidator implements Processor {
         JSONObject respObject = new JSONObject(body);
 
         if (respObject.has("data")) {
-            if(respObject.getJSONArray("data").length()==0)
-            {
-                throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND, "Account does not exist."));
+            if(respObject.getJSONArray("data").length()==0){
+                throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND, "Account does not exist or account is inactive"));
             }
+        }
+        else {
+            throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND, "Account does not exist or account is inactive"));
         }
     }
 }

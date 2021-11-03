@@ -9,11 +9,15 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
+import org.apache.camel.component.bean.validator.BeanValidationException;
 
 import javax.ws.rs.InternalServerErrorException;
 import java.net.SocketTimeoutException;
+import com.modusbox.client.utils.DataFormatUtils;
+import org.apache.http.conn.HttpHostConnectException;
 
 @Component("customErrorProcessor")
 public class CustomErrorProcessor implements Processor {
@@ -43,26 +47,32 @@ public class CustomErrorProcessor implements Processor {
                 try {
                     String customCBSMessage = "";
                     if (null != e.getResponseBody() && !e.getResponseBody().isEmpty()) {
-                        /* Below if block needs to be changed as per the error object structure specific to
-                            CBS back end API that is being integrated in Core Connector. */
-                        JSONObject respObject = new JSONObject(e.getResponseBody());
-                        if (respObject.has("returnStatus")) {
-                            statusCode = String.valueOf(respObject.getInt("returnCode"));
-                            errorDescription = respObject.getString("returnStatus");
+                        if(DataFormatUtils.isJSONValid(e.getResponseBody()))
+                        {
+                            JSONObject respObject = new JSONObject(e.getResponseBody());
+                            if(respObject.has("Message")){
+                                customCBSMessage = respObject.getString("Message");
+                            }
+
+                            if(respObject.has("error")) {
+                                customCBSMessage = (respObject.getString("error")).toString() ;
+                            }
                         }
-                        if(respObject.has("Message")){
-                            customCBSMessage = respObject.getString("Message");
-                        }
+                        else{
+                         customCBSMessage = e.getResponseBody();}
                     }
                     if(e.getStatusCode() == 406){
+                        customCBSMessage = e.getUri().contains("/api/balance") ? customCBSMessage :"Loan repayment process cannot be posted" ;
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR,customCBSMessage));
                     }
                     if(e.getStatusCode() == 417) {
-                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND,customCBSMessage));
-                    }
-                    if(e.getStatusCode() == 500){
+                        customCBSMessage = customCBSMessage.isEmpty() ? "Cannot made loan repayment process" : customCBSMessage + ", cannot made loan repayment process";
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
                     }
+                    if(e.getStatusCode() == 500 || e.getStatusCode() == 404) {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
+                    }
+
                     statusCode =  String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
                     errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
 
@@ -78,14 +88,19 @@ public class CustomErrorProcessor implements Processor {
                         "\",\"extensionList\": [{\"key\": \"errorMessage\",\"value\": \"" + exception.getMessage() +
                         "\"}]}";
 
-            } else {
+            }
+            else {
                 try {
                     if(exception instanceof CCCustomException) {
                         errorResponse = new JSONObject(exception.getMessage());
                     } else if(exception instanceof InternalServerErrorException) {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR));
-                    } else if(exception instanceof ConnectTimeoutException || exception instanceof SocketTimeoutException) {
+                    } else if(exception instanceof ConnectTimeoutException || exception instanceof SocketTimeoutException || exception instanceof HttpHostConnectException) {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.SERVER_TIMED_OUT));
+                    } else if (exception instanceof JSONException) {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, exception.getMessage()));
+                    } else if (exception instanceof java.lang.Exception || exception instanceof BeanValidationException) {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, "CC logical transformation error"));
                     }
                 } finally {
                     httpResponseCode = errorResponse.getInt("errorCode");

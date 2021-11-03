@@ -18,7 +18,7 @@ public class IdSubValueChecker implements Processor {
         }
 
         if(isIdSubValueRequired && (idSubValue == null || idSubValue.trim().isEmpty())) {
-            throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR));
+            throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.MISSING_MANDATORY_ELEMENT,"Required field missing"));
         }
     }
 }

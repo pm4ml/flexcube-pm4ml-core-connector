@@ -11,8 +11,12 @@ import com.modusbox.client.validator.IdSubValueChecker;
 import com.modusbox.client.validator.PhoneNumberValidation;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
+import org.apache.camel.CamelException;
+import org.apache.camel.CamelExchangeException;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.http.HttpException;
+import org.apache.http.conn.HttpHostConnectException;
 
 import java.util.UUID;
 
@@ -122,16 +126,12 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
-                .doCatch(CCCustomException.class,CloseWrittenOffAccountException.class)
-                .to("direct:extractCustomErrors")
-
-                .doFinally().process(exchange -> {
+                .doCatch(CCCustomException.class, HttpException.class,HttpHostConnectException.class,CloseWrittenOffAccountException.class, CamelException.class,CamelExchangeException.class)
+                  .to("direct:extractCustomErrors")
+                .doFinally()
+                .process(exchange -> {
             ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
         }).end()
         ;
-
-
-
-
     }
 }

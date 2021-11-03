@@ -26,8 +26,3 @@ local dueAmount = if cml.exchangeProperty('mfidueAmount') >= 0 then std.toString
     }
   ]
 }
-else
-{
-    "statusCode": "3204",
-    "message": "Party not found"
-}
