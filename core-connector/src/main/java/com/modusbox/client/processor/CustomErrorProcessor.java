@@ -62,21 +62,17 @@ public class CustomErrorProcessor implements Processor {
                          customCBSMessage = e.getResponseBody();}
                     }
                     if(e.getStatusCode() == 406){
-                        if(e.getUri().contains("/api/balance")){// Error 406 came from Balance GET REQUEST API method for checking settled amount.
-                            errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR,customCBSMessage));}
-                        else{// Error 406 came from LOAN POST REQUEST API method for doing loan repayment.
-                            errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR,"Loan repayment process cannot be posted")); }
+                        customCBSMessage = e.getUri().contains("/api/balance") ? customCBSMessage :"Loan repayment process cannot be posted" ;
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR,customCBSMessage));
                     }
                     if(e.getStatusCode() == 417) {
                         customCBSMessage = customCBSMessage.isEmpty() ? "Cannot made loan repayment process" : customCBSMessage + ", cannot made loan repayment process";
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
                     }
-                    if(e.getStatusCode() == 500){
+                    if(e.getStatusCode() == 500 || e.getStatusCode() == 404) {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
                     }
-                    if(e.getStatusCode() == 404){
-                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
-                    }
+
                     statusCode =  String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
                     errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
 

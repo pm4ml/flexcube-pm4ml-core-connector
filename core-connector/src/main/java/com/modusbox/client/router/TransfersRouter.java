@@ -70,7 +70,7 @@ public class TransfersRouter extends RouteBuilder {
                 .setProperty("makerUserID",simple("{{dfsp.username}}"))
                 .setProperty("mfiOfficeName",simple("${body.content.get('mfiOfficeName')}"))
                 .setProperty("walletFspId",simple("${body.content.get('walletFspId')}"))
-                .setProperty("mfiSetlledGL",constant("{{dfsp.settleGL}}"))
+                .setProperty("mfiSetlledGL",constant("{{dfsp.settledGL}}"))
 
                 .setBody(simple("${body.content}"))
                 .marshal().json()
@@ -84,12 +84,11 @@ public class TransfersRouter extends RouteBuilder {
                 .transform(datasonnet("resource:classpath:mappings/postTransfersRepaymentRequest.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
-                .unmarshal().json()
 
                 // Validation the required fields and value before post repayment process.
                 .process(postTransferRequestValidator)
                 // Do repayment process if above step is ok.
-                .marshal().json()
+
                 .to("direct:postLoanRepayment")
 
                 /*
@@ -128,7 +127,7 @@ public class TransfersRouter extends RouteBuilder {
                 .log("Request body : ${body}")
                 .toD("{{dfsp.host}}"+ Post_Repayment_PATH)
                 .unmarshal().json()
-
+                .marshal().json()
                 // Error handling case after doing post transfer
                 .process(postTransferResponseValidator)
 
@@ -136,7 +135,7 @@ public class TransfersRouter extends RouteBuilder {
                         "'Response from Flexcube Loan API with AccountId, ${body}', " +
                         "'Tracking the clientInfo response', 'Verify the response', null)")
 
-                .marshal().json()
+                //.marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/postTransfersResponse.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
