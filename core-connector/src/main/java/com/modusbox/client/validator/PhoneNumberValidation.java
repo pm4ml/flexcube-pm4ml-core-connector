@@ -32,6 +32,8 @@ public class PhoneNumberValidation implements Processor {
         String walletPhoneNumber =(String) exchange.getIn().getHeader("idSubValue");
         walletPhoneNumber = walletPhoneNumber.replaceAll("[-_+:;|!@$%.,/?^]*","");
         String walletLoanNumber = (String) exchange.getIn().getHeader("idValue");
+        String mfiPrefix = walletLoanNumber.substring(0,3);
+        walletLoanNumber = mfiPrefix + (String)exchange.getProperty("loanAccount");
 
         //For checking the phone number that start with +,95,9 etc..
         walletPhoneNumber = PhoneNumberUtils.stripCode(walletPhoneNumber);
@@ -40,9 +42,6 @@ public class PhoneNumberValidation implements Processor {
         //Get phone number that removed special characters for data sonnet
         exchange.setProperty("walletPhoneNumber", walletPhoneNumber);
         exchange.setProperty("walletLoanNumber", walletLoanNumber);
-        String dueDate=null;
-        String pastdueDate=null;
-        String nextinstallationDate =null;
 
         if(!PhoneNumberUtils.isPhoneNumberMatch(walletPhoneNumber.trim(), mfiPhoneNumber.trim()) || !walletLoanNumber.substring(3).equals(mfiAccountNumber)) {
             throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.PHONE_NUMBER_MISMATCH));

@@ -1,6 +1,8 @@
 package com.modusbox.client.router;
 
+import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
+import com.modusbox.client.validator.SettlementAmountValidator;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -21,6 +23,7 @@ public class QuotesRouter extends RouteBuilder {
             .register();
 
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
+    private final SettlementAmountValidator settlementAmountvalidator = new SettlementAmountValidator();
 
     public void configure() {
 
@@ -43,12 +46,17 @@ public class QuotesRouter extends RouteBuilder {
                 /*
                  * BEGIN processing
                  */
+
+
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(200))
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/postQuoterequestsResponse.ds"))
+                .setProperty("transferAmount",simple("${body.content.get('transferAmount')}"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
 
+                // Validation for repayment settled amount
+                .process(settlementAmountvalidator)
                 /*
                  * END processing
                  */
@@ -61,6 +69,8 @@ public class QuotesRouter extends RouteBuilder {
                         "'Output Payload: ${body}')")
                 .process(exchange -> System.out.println("Ending POST Quotes API called*****"))
                 .removeHeaders("*", "X-*")
+                .doCatch(CCCustomException.class, java.lang.Exception.class)
+                .to("direct:extractCustomErrors")
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
                 }).end()

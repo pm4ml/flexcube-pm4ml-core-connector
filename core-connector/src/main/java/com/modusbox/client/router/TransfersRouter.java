@@ -1,10 +1,10 @@
 package com.modusbox.client.router;
 
 import com.modusbox.client.customexception.CCCustomException;
-import com.modusbox.client.customexception.CloseWrittenOffAccountException;
 import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
-import com.modusbox.client.validator.GetSettlementAmountCheckValidator;
-import com.modusbox.client.validator.IdSubValueChecker;
+import com.modusbox.client.validator.PostTransferResponseValidator;
+import com.modusbox.client.validator.SettledBalanceValidator;
+import com.modusbox.client.validator.PostTransferRequestValidator;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
@@ -38,9 +38,10 @@ public class TransfersRouter extends RouteBuilder {
 
     private final String Post_Repayment_PATH = "/loan";
     private final String Check_Settlement_Amount_PATH = "/balance?ACCOUNT_NUMBER=";
-
+    private final SettledBalanceValidator settledBalanceValidator = new SettledBalanceValidator();
+    private final PostTransferRequestValidator postTransferRequestValidator = new PostTransferRequestValidator();
+    private final PostTransferResponseValidator postTransferResponseValidator = new PostTransferResponseValidator();
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
-    private final GetSettlementAmountCheckValidator settlementAmountCheckvalidator = new GetSettlementAmountCheckValidator();
 
     public void configure() {
 
@@ -69,16 +70,15 @@ public class TransfersRouter extends RouteBuilder {
                 .setProperty("makerUserID",simple("{{dfsp.username}}"))
                 .setProperty("mfiOfficeName",simple("${body.content.get('mfiOfficeName')}"))
                 .setProperty("walletFspId",simple("${body.content.get('walletFspId')}"))
-                .setProperty("mfiSetlledGL",simple("${body.content.get('mfiSetlledGL')}"))
-
+                .setProperty("mfiSetlledGL",constant("{{dfsp.settleGL}}"))
 
                 .setBody(simple("${body.content}"))
                 .marshal().json()
                 .log("postTransfersRequest : ${body}")
+
+                .process(settledBalanceValidator)
                 // Checked the settlement amount for over paid before repayment process
                 .to("direct:checkSettlementAmount")
-
-                // Validation for GetSettlementAmountCheckValidator
 
                 .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/postTransfersRepaymentRequest.ds"))
@@ -86,11 +86,11 @@ public class TransfersRouter extends RouteBuilder {
                 .marshal().json()
                 .unmarshal().json()
 
+                // Validation the required fields and value before post repayment process.
+                .process(postTransferRequestValidator)
                 // Do repayment process if above step is ok.
                 .marshal().json()
                 .to("direct:postLoanRepayment")
-
-                // Error handling case after doing post transfer
 
                 /*
                  * END processing
@@ -104,7 +104,7 @@ public class TransfersRouter extends RouteBuilder {
                         "'Output Payload: ${body}')") // default logger
 
                 .removeHeaders("*", "X-*")
-                .doCatch(CCCustomException.class)
+                .doCatch(CCCustomException.class,java.lang.Exception.class)
                 .to("direct:extractCustomErrors")
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME_POST)).observeDuration(); // stop Prometheus Histogram metric
@@ -128,6 +128,9 @@ public class TransfersRouter extends RouteBuilder {
                 .log("Request body : ${body}")
                 .toD("{{dfsp.host}}"+ Post_Repayment_PATH)
                 .unmarshal().json()
+
+                // Error handling case after doing post transfer
+                .process(postTransferResponseValidator)
 
                 .to("bean:customJsonMessage?method=logJsonMessage('info', " +
                         "'Response from Flexcube Loan API with AccountId, ${body}', " +
