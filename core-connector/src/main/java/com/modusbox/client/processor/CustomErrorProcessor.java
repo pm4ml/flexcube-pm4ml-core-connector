@@ -73,9 +73,6 @@ public class CustomErrorProcessor implements Processor {
                     if(e.getStatusCode() == 500 || e.getStatusCode() == 404) {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
                     }
-                    if(e.getStatusCode() == 504) {
-                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,"Gateway time out"));
-                    }
 
                     statusCode =  String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
                     errorDescription = errorResponse.getJSONObject("errorInformation").getString("description");
@@ -115,6 +112,7 @@ public class CustomErrorProcessor implements Processor {
                     errorDescription = errorResponse.getString("description");
                     reasonText = "{ \"statusCode\": \"" + statusCode + "\"," +
                             "\"message\": \"" + errorDescription + "\"} ";
+                    if (httpResponseCode == 504) {httpResponseCode = 500;}
                 }
             }
                 customJsonMessage.logJsonMessage("error", reasonText,
@@ -126,7 +124,7 @@ public class CustomErrorProcessor implements Processor {
         exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "application/json");
         exchange.getMessage().setBody(reasonText);
 
-
+        System.out.println("Http Response Code" + httpResponseCode);
         System.out.println("Response Body Message is " + exchange.getMessage().getBody(String.class));
     }
 }
