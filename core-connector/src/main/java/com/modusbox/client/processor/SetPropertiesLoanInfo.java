@@ -2,11 +2,8 @@ package com.modusbox.client.processor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
-import com.modusbox.client.customexception.CCCustomException;
-import com.modusbox.client.enums.ErrorCode;
-import com.modusbox.client.utils.PhoneNumberUtils;
 import org.json.JSONObject;
-import org.json.simple.JSONArray;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
