@@ -2,13 +2,10 @@ package com.modusbox.client.validator;
 
 import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.enums.ErrorCode;
-import com.modusbox.client.utils.PhoneNumberUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.json.JSONObject;
-import org.json.simple.JSONArray;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.modusbox.client.utils.Utility;
 
 public class PhoneNumberValidation implements Processor {
 
@@ -36,14 +33,14 @@ public class PhoneNumberValidation implements Processor {
         walletLoanNumber = mfiPrefix + (String)exchange.getProperty("loanAccount");
 
         //For checking the phone number that start with +,95,9 etc..
-        walletPhoneNumber = PhoneNumberUtils.stripCode(walletPhoneNumber);
-        mfiPhoneNumber = PhoneNumberUtils.stripCode(mfiPhoneNumber);
+        walletPhoneNumber = Utility.stripMyanmarPhoneNumberCode(walletPhoneNumber);
+        mfiPhoneNumber = Utility.stripMyanmarPhoneNumberCode(mfiPhoneNumber);
 
         //Get phone number that removed special characters for data sonnet
         exchange.setProperty("walletPhoneNumber", walletPhoneNumber);
         exchange.setProperty("walletLoanNumber", walletLoanNumber);
 
-        if(!PhoneNumberUtils.isPhoneNumberMatch(walletPhoneNumber.trim(), mfiPhoneNumber.trim()) || !walletLoanNumber.substring(3).equals(mfiAccountNumber)) {
+        if(!Utility.isPhoneNumberMatch(walletPhoneNumber.trim(), mfiPhoneNumber.trim()) || !walletLoanNumber.substring(3).equals(mfiAccountNumber)) {
             throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.PHONE_NUMBER_MISMATCH));
         }
     }
