@@ -1,0 +1,13 @@
+local loanAccountNo =std.substr(payload.to.idValue,3,14);
+{
+    "quoteId": payload.quoteId,
+    "transactionId":  payload.transactionId,
+    "accountId": loanAccountNo ,
+    "transferAmount":  payload.amount,
+    "transferAmountCurrency": payload.currency,
+	"payeeFspFeeAmount": "0",
+	"payeeFspFeeAmountCurrency": payload.currency,
+    "payeeFspCommissionAmount": "0",
+    "payeeFspCommissionAmountCurrency": payload.currency,
+    "expiration":  payload.expiration
+}
