@@ -7,6 +7,12 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.http.base.HttpOperationFailedException;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.HttpHostConnectException;
+import org.json.JSONException;
+
+import java.net.SocketTimeoutException;
 
 public class QuotesRouter extends RouteBuilder {
 
@@ -25,6 +31,8 @@ public class QuotesRouter extends RouteBuilder {
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
     private final SettlementAmountValidator settlementAmountvalidator = new SettlementAmountValidator();
 
+    private final String Check_Settlement_Amount_PATH = "/balance?ACCOUNT_NUMBER=";
+
     public void configure() {
 
         exceptionHandlingConfigurer.configureExceptionHandling(this);
@@ -35,7 +43,6 @@ public class QuotesRouter extends RouteBuilder {
                     reqCounter.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME, reqLatency.startTimer()); // initiate Prometheus Histogram metric
                 })
-                .to("direct:getAuthHeader")
                 .process(exchange -> System.out.println("Starting POST Quotes API called*****"))
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
@@ -47,10 +54,11 @@ public class QuotesRouter extends RouteBuilder {
                  * BEGIN processing
                  */
 
-
+                .setProperty("postQuoteRequest",simple("${body}"))
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(200))
                 .marshal().json()
-                .transform(datasonnet("resource:classpath:mappings/postQuoterequestsResponse.ds"))
+                .transform(datasonnet("resource:classpath:mappings/getPaymentAmountValidationRequest.ds"))
+                .setProperty("accountId", simple("${body.content.get('accountId')}"))
                 .setProperty("transferAmount",simple("${body.content.get('transferAmount')}"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
@@ -60,6 +68,13 @@ public class QuotesRouter extends RouteBuilder {
                 /*
                  * END processing
                  */
+                .to("direct:checkSettlementAmount")
+                .log("${body}")
+                .setBody(simple("${exchangeProperty.postQuoteRequest}"))
+                .marshal().json()
+                .transform(datasonnet("resource:classpath:mappings/postQuoterequestsResponse.ds"))
+                .setBody(simple("${body.content}"))
+                .marshal().json()
 
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
@@ -69,11 +84,27 @@ public class QuotesRouter extends RouteBuilder {
                         "'Output Payload: ${body}')")
                 .process(exchange -> System.out.println("Ending POST Quotes API called*****"))
                 .removeHeaders("*", "X-*")
-                .doCatch(CCCustomException.class, java.lang.Exception.class)
-                .to("direct:extractCustomErrors")
+                .doCatch(CCCustomException.class, java.lang.Exception.class, HttpOperationFailedException.class, JSONException.class, ConnectTimeoutException.class, SocketTimeoutException.class, HttpHostConnectException.class)
+                    .to("direct:extractCustomErrors")
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
                 }).end()
+        ;
+
+        from("direct:checkSettlementAmount")
+                .to("direct:getAuthHeader")
+                .setHeader(Exchange.HTTP_METHOD, constant("GET"))
+                .to("bean:customJsonMessage?method=logJsonMessage(" +
+                        "'info', " +
+                        "'Calling the Amount check validation API GET {{dfsp.host}}', " +
+                        "'Tracking the request', " +
+                        "'Track the response', " +
+                        "'Input Payload: ${body}')")
+                .toD("{{dfsp.host}}"+ Check_Settlement_Amount_PATH +"${exchangeProperty.accountId}&SETTLED_AMOUNT=${exchangeProperty.transferAmount}")
+                .unmarshal().json()
+                .to("bean:customJsonMessage?method=logJsonMessage('info',  " +
+                        "'Response from Flexcube Amount check validation API with AccountId and Amount, ${body}', " +
+                        "'Tracking the settlement amount response', 'Verify the response', null)")
         ;
     }
 }

@@ -48,7 +48,6 @@ public class TransfersRouter extends RouteBuilder {
             .register();
 
     private final String Post_Repayment_PATH = "/loan";
-    private final String Check_Settlement_Amount_PATH = "/balance?ACCOUNT_NUMBER=";
     private final SettledBalanceValidator settledBalanceValidator = new SettledBalanceValidator();
     private final PostTransferRequestValidator postTransferRequestValidator = new PostTransferRequestValidator();
     private final PostTransferResponseValidator postTransferResponseValidator = new PostTransferResponseValidator();
@@ -88,10 +87,7 @@ public class TransfersRouter extends RouteBuilder {
                 .log("postTransfersRequest : ${body}")
 
                 .process(settledBalanceValidator)
-                // Checked the settlement amount for over paid before repayment process
-                .to("direct:checkSettlementAmount")
 
-                .marshal().json()
                 .transform(datasonnet("resource:classpath:mappings/postTransfersRepaymentRequest.ds"))
                 .setBody(simple("${body.content}"))
                 .marshal().json()
@@ -119,17 +115,6 @@ public class TransfersRouter extends RouteBuilder {
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME_POST)).observeDuration(); // stop Prometheus Histogram metric
                 }).end()
-        ;
-
-
-        from("direct:checkSettlementAmount")
-                .to("direct:getAuthHeader")
-                .setHeader(Exchange.HTTP_METHOD, constant("GET"))
-                .toD("{{dfsp.host}}"+ Check_Settlement_Amount_PATH +"${exchangeProperty.mfiLoanAccountNo}&SETTLED_AMOUNT=${exchangeProperty.transactionAmount}")
-                .unmarshal().json()
-                .to("bean:customJsonMessage?method=logJsonMessage('info',  " +
-                        "'Response from Flexcube Loan API with AccountId, ${body}', " +
-                        "'Tracking the settlement amount response', 'Verify the response', null)")
         ;
 
         from("direct:postLoanRepayment")
