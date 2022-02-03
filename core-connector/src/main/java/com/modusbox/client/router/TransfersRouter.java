@@ -9,6 +9,9 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.http.base.HttpOperationFailedException;
+import org.apache.camel.model.dataformat.JsonLibrary;
+import org.json.JSONException;
 
 public class TransfersRouter extends RouteBuilder {
 
