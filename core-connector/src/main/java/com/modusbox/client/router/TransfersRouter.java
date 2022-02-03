@@ -207,11 +207,6 @@ public class TransfersRouter extends RouteBuilder {
                 .setBody(simple("${body.content}"))
                 .marshal().json()
                 .endDoTry()
-            
-                .marshal().json()
-                .transform(datasonnet("resource:classpath:mappings/getTransfersResponse.ds"))
-                .setBody(simple("${body.content}"))
-                .marshal().json()
 
                 /*
                  * END processing
