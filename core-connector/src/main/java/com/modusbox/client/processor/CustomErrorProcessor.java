@@ -17,8 +17,9 @@ import org.apache.camel.component.bean.validator.BeanValidationException;
 import javax.ws.rs.InternalServerErrorException;
 import java.net.SocketTimeoutException;
 import com.modusbox.client.utils.DataFormatUtils;
-import org.apache.http.conn.HttpHostConnectException;
 import sun.awt.SunToolkit;
+import org.apache.http.conn.HttpHostConnectException;
+
 
 
 @Component("customErrorProcessor")
