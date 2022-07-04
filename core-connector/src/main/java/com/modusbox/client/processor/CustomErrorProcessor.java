@@ -18,7 +18,7 @@ import javax.ws.rs.InternalServerErrorException;
 import java.net.SocketTimeoutException;
 import com.modusbox.client.utils.DataFormatUtils;
 import org.apache.http.conn.HttpHostConnectException;
-import sun.awt.SunToolkit;
+
 
 @Component("customErrorProcessor")
 public class CustomErrorProcessor implements Processor {
@@ -96,7 +96,7 @@ public class CustomErrorProcessor implements Processor {
                         errorResponse = new JSONObject(exception.getMessage());
                     } else if(exception instanceof InternalServerErrorException) {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR));
-                    } else if(exception instanceof ConnectTimeoutException || exception instanceof SocketTimeoutException || exception instanceof HttpHostConnectException || exception instanceof SunToolkit.OperationTimedOut) {
+                    } else if(exception instanceof ConnectTimeoutException || exception instanceof SocketTimeoutException || exception instanceof HttpHostConnectException) {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.SERVER_TIMED_OUT));
                     } else if (exception instanceof JSONException) {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, exception.getMessage()));
