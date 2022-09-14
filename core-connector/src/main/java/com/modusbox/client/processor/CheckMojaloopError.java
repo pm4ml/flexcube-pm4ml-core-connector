@@ -47,7 +47,7 @@ public class CheckMojaloopError implements Processor {
                 throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, "Error while retrieving transfer state, please retry later."));
             }
         } catch (JSONException e) {
-            System.out.println("Problem extracting error code from Mojaloop error response occurred.");
+            customJsonMessage.logJsonMessage("error", String.valueOf(exchange.getIn().getHeader("X-CorrelationId")),null,null,null,"Problem extracting error code from Mojaloop error response occurred.");
             throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR));
         }
 
