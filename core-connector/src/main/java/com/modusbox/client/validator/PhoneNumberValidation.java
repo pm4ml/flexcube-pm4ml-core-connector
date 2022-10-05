@@ -18,19 +18,15 @@ public class PhoneNumberValidation implements Processor {
 
         JSONObject customerDetails = new JSONObject(body);
 
-        //Check the MOBILE_NUMBER and ACCOUNT_NUMBER field is exists or not in result loan info from CBS
-        JSONObject fieldName = customerDetails.getJSONArray("data").getJSONObject(0);
-        if(fieldName.has("MOBILE_NUMBER") && fieldName.has("ACCOUNT_NUMBER") ) {
-            mfiPhoneNumber = customerDetails.getJSONArray("data").getJSONObject(0).getString("MOBILE_NUMBER").replaceAll("[-_+:;|!@$%.,/?^]*","");
-            mfiAccountNumber = customerDetails.getJSONArray("data").getJSONObject(0).getString("ACCOUNT_NUMBER");
+        if(customerDetails.has("mobileNumber") && customerDetails.has("accuntNumber") ) {
+            mfiPhoneNumber = customerDetails.getString("mobileNumber").replaceAll("[-_+:;|!@$%.,/?^]*","");
+            mfiAccountNumber = customerDetails.getString("accuntNumber");
         }
 
         // Get the walletPhoneNumber and walletLoanNumber
         String walletPhoneNumber =(String) exchange.getIn().getHeader("idSubValue");
         walletPhoneNumber = walletPhoneNumber.replaceAll("[-_+:;|!@$%.,/?^]*","");
-        String walletLoanNumber = (String) exchange.getIn().getHeader("idValue");
-        String mfiPrefix = walletLoanNumber.substring(0,3);
-        walletLoanNumber = mfiPrefix + (String)exchange.getProperty("loanAccount");
+        String walletLoanNumber = exchange.getProperty("loanAccount").toString();//(String) exchange.getIn().getHeader("idValue");
 
         //For checking the phone number that start with +,95,9 etc..
         walletPhoneNumber = Utility.stripMyanmarPhoneNumberCode(walletPhoneNumber);
@@ -38,9 +34,9 @@ public class PhoneNumberValidation implements Processor {
 
         //Get phone number that removed special characters for data sonnet
         exchange.setProperty("walletPhoneNumber", walletPhoneNumber);
-        exchange.setProperty("walletLoanNumber", walletLoanNumber);
+        exchange.setProperty("walletLoanNumber", exchange.getIn().getHeader("idValue"));
 
-        if(!Utility.isPhoneNumberMatch(walletPhoneNumber.trim(), mfiPhoneNumber.trim()) || !walletLoanNumber.substring(3).equals(mfiAccountNumber)) {
+        if(!Utility.isPhoneNumberMatch(walletPhoneNumber.trim(), mfiPhoneNumber.trim()) || !walletLoanNumber.equals(mfiAccountNumber)) {
             throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.PHONE_NUMBER_MISMATCH));
         }
     }

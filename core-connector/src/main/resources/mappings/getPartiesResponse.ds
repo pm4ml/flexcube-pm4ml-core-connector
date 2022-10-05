@@ -1,12 +1,9 @@
-local loanInfo = payload.data[0];
-if ds.sizeOf(payload.data) > 0 then
-local dueAmount = if cml.exchangeProperty('mfidueAmount') >= 0 then std.toString(cml.exchangeProperty('mfidueAmount')) else "";
 {
   idType: "ACCOUNT_ID",
   idValue: cml.exchangeProperty('walletLoanNumber'),
   idSubValue: cml.exchangeProperty('walletPhoneNumber'),
-  lastName: loanInfo.FULL_NAME,
-  displayName: loanInfo.FULL_NAME,
+  lastName: payload.fullName,
+  displayName: payload.fullName,
   extensionList: [
     {
         key: "mfiName",
@@ -14,7 +11,7 @@ local dueAmount = if cml.exchangeProperty('mfidueAmount') >= 0 then std.toString
     },
     {
         key: "amountDue",
-        value: dueAmount
+        value: std.toString(cml.exchangeProperty('mfidueAmount'))
     },
     {
         key: "dueDate",
@@ -22,7 +19,7 @@ local dueAmount = if cml.exchangeProperty('mfidueAmount') >= 0 then std.toString
     },
     {
         key: "branchName",
-        value: std.toString(loanInfo.Branch_Code + " " + loanInfo.Branch_NAME)
+        value: std.toString(payload.branchCode + " " + payload.branchName)
     }
   ]
 }

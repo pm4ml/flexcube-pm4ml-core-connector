@@ -19,45 +19,43 @@ public class SetPropertiesLoanInfo implements Processor {
         String pastdueDate=null;
         String nextinstallationDate =null;
 
-        if(loanDetails.getJSONArray("data").length()>0)
+        if(!loanDetails.isNull("dueDate"))
+            currentDueDate = loanDetails.getString("dueDate");
+
+        if(!loanDetails.isNull("pastDueDate"))
+            pastdueDate = loanDetails.getString("pastDueDate");
+
+        if(!loanDetails.isNull("nextInstallationDate"))
+            nextinstallationDate = loanDetails.getString("nextInstallationDate");
+
+        Integer dueAmount = loanDetails.getInt("dueAmount");
+        Integer pastdueAmount = loanDetails.getInt("pastDueAmount");
+        Integer nextinstallationAmount = loanDetails.getInt("nextInstallationAmount");
+
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date finalDueDate = new Date();
+        Integer finalDueAmount = 0;
+
+        if(dueAmount > 0 || pastdueAmount > 0)
         {
-            if(!loanDetails.getJSONArray("data").getJSONObject(0).isNull("DUE_DATE"))
-                currentDueDate = loanDetails.getJSONArray("data").getJSONObject(0).getString("DUE_DATE");
-
-            if(!loanDetails.getJSONArray("data").getJSONObject(0).isNull("PAST_DUE_DATE"))
-                pastdueDate = loanDetails.getJSONArray("data").getJSONObject(0).getString("PAST_DUE_DATE");
-
-            if(!loanDetails.getJSONArray("data").getJSONObject(0).isNull("NEXT_INSTALLATION_DATE"))
-                nextinstallationDate = loanDetails.getJSONArray("data").getJSONObject(0).getString("NEXT_INSTALLATION_DATE");
-
-            Integer dueAmount = loanDetails.getJSONArray("data").getJSONObject(0).getInt("DUE_AMOUNT");
-            Integer pastdueAmount = loanDetails.getJSONArray("data").getJSONObject(0).getInt("Past_Due_Amount");
-            Integer nextinstallationAmount = loanDetails.getJSONArray("data").getJSONObject(0).getInt("NEXT_INSTALLATION_AMOUNT");
-
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
-            Date finalDueDate = new Date();
-            Integer finalDueAmount = 0;
-
-            if(dueAmount > 0 || pastdueAmount > 0)
+            if(currentDueDate != null && dueAmount > 0)
             {
-                if(currentDueDate != null && dueAmount > 0)
-                {
-                    finalDueDate = dateFormatter.parse(currentDueDate);
-                }
-                else
-                {
-                    finalDueDate = dateFormatter.parse(pastdueDate);
-                }
-                finalDueAmount = dueAmount + pastdueAmount;
+                finalDueDate = dateFormatter.parse(currentDueDate);
             }
             else
             {
-                finalDueDate = dateFormatter.parse(nextinstallationDate);
-                finalDueAmount = nextinstallationAmount;
+                finalDueDate = dateFormatter.parse(pastdueDate);
             }
-
-            exchange.setProperty("mfidueDate", dateFormatter.format(finalDueDate));
-            exchange.setProperty("mfidueAmount", finalDueAmount);
+            finalDueAmount = dueAmount + pastdueAmount;
         }
+        else
+        {
+            finalDueDate = dateFormatter.parse(nextinstallationDate);
+            finalDueAmount = nextinstallationAmount;
+        }
+
+        exchange.setProperty("mfidueDate", dateFormatter.format(finalDueDate));
+        exchange.setProperty("mfidueAmount", finalDueAmount);
+
     }
 }

@@ -17,7 +17,7 @@ public class PostTransferResponseValidator implements Processor {
         if(DataFormatUtils.isJSONValid(body)) {
             JSONObject respObject = new JSONObject(body);
 
-            if (!respObject.has("STLREFNO")) {
+            if (!respObject.has("setlRefNo")) {
                 throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, "Cannot made loan repayment process"));
             }
         }

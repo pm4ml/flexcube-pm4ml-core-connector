@@ -51,27 +51,26 @@ public class CustomErrorProcessor implements Processor {
                         if(DataFormatUtils.isJSONValid(e.getResponseBody()))
                         {
                             JSONObject respObject = new JSONObject(e.getResponseBody());
-                            if(respObject.has("Message")){
-                                customCBSMessage = respObject.getString("Message");
-                            }
-
-                            if(respObject.has("error")) {
-                                customCBSMessage = (respObject.getString("error")).toString() ;
+                            if(respObject.has("message")){
+                                customCBSMessage = respObject.getString("message");
                             }
                         }
                         else{
                          customCBSMessage = e.getResponseBody();}
                     }
                     if(e.getStatusCode() == 406){
-                        customCBSMessage = e.getUri().contains("/api/balance") ? customCBSMessage :"Loan repayment process cannot be posted" ;
+                        customCBSMessage = e.getUri().contains("getBalance") ? customCBSMessage :"Loan repayment process cannot be posted" ;
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR,customCBSMessage));
                     }
                     if(e.getStatusCode() == 417) {
-                        customCBSMessage = customCBSMessage.isEmpty() ? "Cannot made loan repayment process" : customCBSMessage + ", cannot made loan repayment process";
+                        customCBSMessage = customCBSMessage.isEmpty() ? "Cannot made loan repayment process" : customCBSMessage;
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
                     }
                     if(e.getStatusCode() == 500 || e.getStatusCode() == 404) {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage));
+                    }
+                    else {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR,customCBSMessage.isEmpty() ? "Cannot made loan repayment process" : customCBSMessage));
                     }
 
                     statusCode =  String.valueOf(errorResponse.getJSONObject("errorInformation").getInt("statusCode"));
@@ -124,7 +123,7 @@ public class CustomErrorProcessor implements Processor {
         exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, "application/json");
         exchange.getMessage().setBody(reasonText);
 
-        System.out.println("Http Response Code" + httpResponseCode);
-        System.out.println("Response Body Message is " + exchange.getMessage().getBody(String.class));
+        customJsonMessage.logJsonMessage("error", String.valueOf(exchange.getIn().getHeader("X-CorrelationId")),null,null,null,"Http Response Code" + httpResponseCode);
+        customJsonMessage.logJsonMessage("error", String.valueOf(exchange.getIn().getHeader("X-CorrelationId")),null,null,null,"Response Body Message is " + exchange.getMessage().getBody(String.class));
     }
 }

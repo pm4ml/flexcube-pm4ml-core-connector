@@ -50,7 +50,7 @@ public class TransfersRouter extends RouteBuilder {
             .help("Request latency in seconds for GET /transfers.")
             .register();
 
-    private final String Post_Repayment_PATH = "/loan";
+    private final String Post_Repayment_PATH = "/loan/repayment";
     private final SettledBalanceValidator settledBalanceValidator = new SettledBalanceValidator();
     private final PostTransferRequestValidator postTransferRequestValidator = new PostTransferRequestValidator();
     private final PostTransferResponseValidator postTransferResponseValidator = new PostTransferResponseValidator();
@@ -80,8 +80,7 @@ public class TransfersRouter extends RouteBuilder {
                 .setProperty("transactionAmount",simple("${body.content.get('transactionAmount')}"))
                 .setProperty("transactionId",simple("${body.content.get('transactionId')}"))
                 .setProperty("transferID",simple("${body.content.get('transferID')}"))
-                .setProperty("makerUserID",simple("{{dfsp.username}}"))
-                .setProperty("mfiOfficeName",simple("${body.content.get('mfiOfficeName')}"))
+                .setProperty("makerUserID",simple("{{dfsp.makerUserId}}"))
                 .setProperty("walletFspId",simple("${body.content.get('walletFspId')}"))
                 .setProperty("mfiSetlledGL",constant("{{dfsp.settledGL}}"))
 
