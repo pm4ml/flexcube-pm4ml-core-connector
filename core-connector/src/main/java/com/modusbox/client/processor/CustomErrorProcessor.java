@@ -84,12 +84,6 @@ public class CustomErrorProcessor implements Processor {
                     {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND, customCBSMessage));
                     }
-                    else if (e.getStatusCode() == 401 ||customCBSError.contains("MIS-CUSSRT01") ) {
-                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.DESTINATION_COMMUNICATION_ERROR, customCBSMessage));
-                    }
-                    else if (e.getStatusCode() == 500) {
-                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.SERVER_BUSY, customCBSMessage));
-                    }
                     else {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, customCBSMessage.isEmpty() ? "Cannot made loan repayment process" : customCBSMessage));
                     }
