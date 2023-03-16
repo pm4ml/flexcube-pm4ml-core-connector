@@ -3,21 +3,21 @@ package com.modusbox.client.processor;
 import com.modusbox.client.customexception.CCCustomException;
 import com.modusbox.client.customexception.CloseWrittenOffAccountException;
 import com.modusbox.client.enums.ErrorCode;
+import com.modusbox.client.utils.DataFormatUtils;
 import com.modusbox.log4j2.message.CustomJsonMessage;
 import com.modusbox.log4j2.message.CustomJsonMessageImpl;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
+import org.apache.camel.component.bean.validator.BeanValidationException;
 import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
-import org.apache.camel.component.bean.validator.BeanValidationException;
 
 import javax.ws.rs.InternalServerErrorException;
 import java.net.SocketTimeoutException;
-import com.modusbox.client.utils.DataFormatUtils;
-import org.apache.http.conn.HttpHostConnectException;
 
 
 @Component("customErrorProcessor")
@@ -45,49 +45,51 @@ public class CustomErrorProcessor implements Processor {
         if (exception != null) {
             if (exception instanceof HttpOperationFailedException) {
                 HttpOperationFailedException e = (HttpOperationFailedException) exception;
-                String customCBSMessage = null;
-                String customCBSError= null;
+                String customCBSMessage = "";
+                String customCBSError= "";
                 try {
                     customCBSMessage = "";
                     if (null != e.getResponseBody() && !e.getResponseBody().isEmpty()) {
                         if (DataFormatUtils.isJSONValid(e.getResponseBody())) {
                             JSONObject respObject = new JSONObject(e.getResponseBody());
-                            if (respObject.has("message")) {
-                                customCBSMessage = respObject.getString("message");
-                            }
-                            else if (respObject.has("error")){
-                                customCBSMessage = respObject.getString("error");
-                            }
-                            else{
-                                customCBSMessage="unknown CBS error";
-                            }
+
+
                             if (respObject.has("error")) {
                                 customCBSError = respObject.getString("error");
+                                customCBSMessage=respObject.getString("message");
+                            }
+                            else
+                            {
+                                customCBSMessage= "unknown CBS error";
                             }
                         } else {
                             customCBSMessage = e.getResponseBody();
                         }
                     }
-                    if ( customCBSError.contains("MIS-CUSCL02"))  {
+                    if ( customCBSError.equals("MIS-CUSCL02"))  {
                         //statusCode = String.valueOf(ErrorCode.GENERIC_ID_NOT_FOUND.getStatusCode());
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.GENERIC_PAYEE_REJECTION, customCBSMessage));
                         //  errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND,StringUtils.parseJsonString(respObject.getString("message")));
                     }
 
-                    else if (customCBSError.contains("CL-PMTV39") || customCBSError.contains("CL-PMTV32") || customCBSError.contains("CL-PMTV05"))
+                    else if (customCBSError.equals("CL-PMTV39") || customCBSError.equals("CL-PMTV32") || customCBSError.equals("CL-PMTV05"))
                     {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_LIMIT_ERROR, customCBSMessage));
                     }
 
 
-                    else if (customCBSError.contains("CL-INVBR") || customCBSError.contains("CL-PMTV02") )
+                    else if ( customCBSError.equals("CL-PMTV02") ||customCBSError.equals("MIS-CUSCL03") || customCBSError.equals("GW-ROUT0006") )
                     {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.GENERIC_ID_NOT_FOUND, customCBSMessage));
                     }
-                   else if ( customCBSError.contains("MIS-CUSSRT01"))  {
-                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.DESTINATION_COMMUNICATION_ERROR, customCBSMessage));
+                    else if (customCBSError.equals("CL-INVBR") )
+                    {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_FSP_ID_NOT_FOUND, customCBSMessage));
+
                     }
-                    else {
+                   else if ( customCBSError.equals("MIS-CUSSRT01"))  {
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.DESTINATION_COMMUNICATION_ERROR, customCBSMessage));
+                    }  else {
                         errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, customCBSMessage.isEmpty() ? "Cannot made loan repayment process" : customCBSMessage));
                     }
 
