@@ -84,7 +84,7 @@ public class CustomErrorProcessor implements Processor {
                     }
                     else if (customCBSError.equals("CL-INVBR") )
                     {
-                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.PAYEE_FSP_ID_NOT_FOUND, customCBSMessage));
+                        errorResponse = new JSONObject(ErrorCode.getErrorResponse(ErrorCode.INACTIVE_ACCOUNT, customCBSMessage));
 
                     }
                    else if ( customCBSError.equals("MIS-CUSSRT01"))  {
