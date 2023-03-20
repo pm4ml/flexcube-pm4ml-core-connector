@@ -24,7 +24,7 @@ public class SettledBalanceValidator implements Processor {
         }
         if(!DataFormatUtils.isOnlyDigits(settledAmount))
         {
-            throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.MALFORMED_SYNTAX,"Invalid settled amount Format"));
+            throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.ROUNDING_VALUE_ERROR,"Invalid settled amount Format"));
         }
 
         if (settledAmount.equals("0")) {
