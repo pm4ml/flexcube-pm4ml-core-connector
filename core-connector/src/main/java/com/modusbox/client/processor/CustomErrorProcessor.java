@@ -48,7 +48,6 @@ public class CustomErrorProcessor implements Processor {
                 String customCBSMessage = "";
                 String customCBSError= "";
                 try {
-                    customCBSMessage = "";
                     if (null != e.getResponseBody() && !e.getResponseBody().isEmpty()) {
                         if (DataFormatUtils.isJSONValid(e.getResponseBody())) {
                             JSONObject respObject = new JSONObject(e.getResponseBody());
