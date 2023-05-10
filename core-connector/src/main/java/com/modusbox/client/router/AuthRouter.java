@@ -73,6 +73,11 @@ public class AuthRouter extends RouteBuilder {
 
                 .when(method(TokenStore.class, "getAccessToken()").isEqualTo(""))
                     .setProperty("RefreshToken",method(TokenStore.class, "getRefreshToken()"))
+                    .removeHeaders("Camel*")
+                    .setHeader("Content-Type", constant("application/json"))
+                    .setHeader(Exchange.HTTP_METHOD, constant("POST"))
+                    .setBody(constant(""))
+                    .marshal().json()
                     .transform(datasonnet("resource:classpath:mappings/postAuthRefreshTokenRequest.ds"))
                     .setBody(simple("${body.content}"))
                     .marshal().json()
@@ -82,7 +87,7 @@ public class AuthRouter extends RouteBuilder {
                             "'Calling the refresh token " + PATH_NAME + "', " +
                             "null, " +
                             "null, " +
-                            "'Request to POST {{dfsp.host}}" + PATH +", IN Payload: ${body}')")
+                            "'Request to POST {{dfsp.host}}" + PATH2 +", IN Payload: ${body}')")
                     .toD("{{dfsp.host}}" + PATH2)
                     .unmarshal().json()
                     .setProperty("AccessToken", simple("${body['accessToken']}"))
@@ -95,7 +100,7 @@ public class AuthRouter extends RouteBuilder {
                             "'Called refresh token " + PATH_NAME + "', " +
                             "null, " +
                             "null, " +
-                            "'Response from POST {{dfsp.host}}" + PATH + ", OUT Payload: ${body}')")
+                            "'Response from POST {{dfsp.host}}" + PATH2 + ", OUT Payload: ${body}')")
                 .otherwise()
                     .setProperty("AccessToken", method(TokenStore.class, "getAccessToken()"))
                 .end()
