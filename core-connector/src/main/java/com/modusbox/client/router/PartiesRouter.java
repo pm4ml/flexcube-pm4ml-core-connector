@@ -126,7 +126,7 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
-                .doCatch(CCCustomException.class, HttpException.class,HttpHostConnectException.class,CloseWrittenOffAccountException.class, CamelException.class,CamelExchangeException.class)
+                .doCatch(CCCustomException.class, HttpException.class,HttpHostConnectException.class,CloseWrittenOffAccountException.class, CamelException.class,CamelExchangeException.class, Exception.class)
                   .to("direct:extractCustomErrors")
                 .doFinally()
                 .process(exchange -> {

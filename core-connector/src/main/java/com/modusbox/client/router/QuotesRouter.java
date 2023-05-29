@@ -84,7 +84,7 @@ public class QuotesRouter extends RouteBuilder {
                         "'Output Payload: ${body}')")
                 .log("Ending POST Quotes API called*****")
                 .removeHeaders("*", "X-*")
-                .doCatch(CCCustomException.class, java.lang.Exception.class, HttpOperationFailedException.class, JSONException.class, ConnectTimeoutException.class, SocketTimeoutException.class, HttpHostConnectException.class)
+                .doCatch(CCCustomException.class, java.lang.Exception.class, HttpOperationFailedException.class, JSONException.class, ConnectTimeoutException.class, SocketTimeoutException.class, HttpHostConnectException.class, Exception.class)
                     .to("direct:extractCustomErrors")
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric

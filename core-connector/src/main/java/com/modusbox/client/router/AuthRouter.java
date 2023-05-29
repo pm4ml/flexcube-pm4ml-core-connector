@@ -4,7 +4,6 @@ import com.modusbox.client.exception.RouteExceptionHandlingConfigurer;
 import com.modusbox.client.processor.TokenStore;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.model.dataformat.JsonLibrary;
 
 public class AuthRouter extends RouteBuilder {
     private final String PATH_NAME = "Flexcube Fetch Access Token API";
@@ -87,7 +86,7 @@ public class AuthRouter extends RouteBuilder {
                             "'Calling the refresh token " + PATH_NAME + "', " +
                             "null, " +
                             "null, " +
-                            "'Request to POST {{dfsp.host}}" + PATH2 +", IN Payload: ${body}')")
+                            "'Request to POST {{dfsp.host}}" + PATH2 +", IN Payload: ${body} IN Headers: ${headers}')")
                     .toD("{{dfsp.host}}" + PATH2)
                     .unmarshal().json()
                     .setProperty("AccessToken", simple("${body['accessToken']}"))
@@ -102,6 +101,7 @@ public class AuthRouter extends RouteBuilder {
                             "null, " +
                             "'Response from POST {{dfsp.host}}" + PATH2 + ", OUT Payload: ${body}')")
                 .otherwise()
+                    .removeHeaders("Camel*")
                     .setProperty("AccessToken", method(TokenStore.class, "getAccessToken()"))
                 .end()
 

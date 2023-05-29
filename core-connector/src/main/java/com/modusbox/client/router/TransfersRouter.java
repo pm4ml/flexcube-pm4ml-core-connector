@@ -112,7 +112,7 @@ public class TransfersRouter extends RouteBuilder {
                         "'Output Payload: ${body}')") // default logger
 
                 .removeHeaders("*", "X-*")
-                .doCatch(CCCustomException.class,java.lang.Exception.class)
+                .doCatch(CCCustomException.class,java.lang.Exception.class, Exception.class)
                 .to("direct:extractCustomErrors")
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME_POST)).observeDuration(); // stop Prometheus Histogram metric
@@ -155,7 +155,7 @@ public class TransfersRouter extends RouteBuilder {
 
                 .removeHeaders("*", "X-*")
 
-                .doCatch(CCCustomException.class)
+                .doCatch(CCCustomException.class, Exception.class)
                 .to("direct:extractCustomErrors")
 
                 .doFinally().process(exchange -> {
@@ -214,7 +214,7 @@ public class TransfersRouter extends RouteBuilder {
                         "'Final Response: ${body}', " +
                         "null, null, 'Response of GET /transfers/${header.transferId} API')")
 
-                .doCatch(CCCustomException.class, HttpOperationFailedException.class, JSONException.class)
+                .doCatch(CCCustomException.class, HttpOperationFailedException.class, JSONException.class, Exception.class)
                     .to("direct:extractCustomErrors")            
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME_GET)).observeDuration(); // stop Prometheus Histogram metric
