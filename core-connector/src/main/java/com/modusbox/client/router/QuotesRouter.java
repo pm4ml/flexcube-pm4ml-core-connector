@@ -31,7 +31,7 @@ public class QuotesRouter extends RouteBuilder {
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
     private final SettlementAmountValidator settlementAmountvalidator = new SettlementAmountValidator();
 
-    private final String Check_Settlement_Amount_PATH = "/balance?ACCOUNT_NUMBER=";
+    private final String Check_Settlement_Amount_PATH = "/loan/getBalance/";
 
     public void configure() {
 
@@ -43,7 +43,7 @@ public class QuotesRouter extends RouteBuilder {
                     reqCounter.inc(1); // increment Prometheus Counter metric
                     exchange.setProperty(TIMER_NAME, reqLatency.startTimer()); // initiate Prometheus Histogram metric
                 })
-                .process(exchange -> System.out.println("Starting POST Quotes API called*****"))
+                .log("Starting POST Quotes API called*****")
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
                         "'Request received POST /quoterequests', " +
@@ -82,9 +82,9 @@ public class QuotesRouter extends RouteBuilder {
                         "'Tracking the response', " +
                         "null, " +
                         "'Output Payload: ${body}')")
-                .process(exchange -> System.out.println("Ending POST Quotes API called*****"))
+                .log("Ending POST Quotes API called*****")
                 .removeHeaders("*", "X-*")
-                .doCatch(CCCustomException.class, java.lang.Exception.class, HttpOperationFailedException.class, JSONException.class, ConnectTimeoutException.class, SocketTimeoutException.class, HttpHostConnectException.class)
+                .doCatch(CCCustomException.class, java.lang.Exception.class, HttpOperationFailedException.class, JSONException.class, ConnectTimeoutException.class, SocketTimeoutException.class, HttpHostConnectException.class, Exception.class)
                     .to("direct:extractCustomErrors")
                 .doFinally().process(exchange -> {
                     ((Histogram.Timer) exchange.getProperty(TIMER_NAME)).observeDuration(); // stop Prometheus Histogram metric
@@ -96,11 +96,11 @@ public class QuotesRouter extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant("GET"))
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
                         "'info', " +
-                        "'Calling the Amount check validation API GET {{dfsp.host}}', " +
+                        "'Calling the Amount check validation API GET {{dfsp.host}}"+ Check_Settlement_Amount_PATH +"${exchangeProperty.accountId}/${exchangeProperty.transferAmount}', " +
                         "'Tracking the request', " +
                         "'Track the response', " +
                         "'Input Payload: ${body}')")
-                .toD("{{dfsp.host}}"+ Check_Settlement_Amount_PATH +"${exchangeProperty.accountId}&SETTLED_AMOUNT=${exchangeProperty.transferAmount}")
+                .toD("{{dfsp.host}}"+ Check_Settlement_Amount_PATH +"${exchangeProperty.accountId}/${exchangeProperty.transferAmount}")
                 .unmarshal().json()
                 .to("bean:customJsonMessage?method=logJsonMessage('info',  " +
                         "'Response from Flexcube Amount check validation API with AccountId and Amount, ${body}', " +

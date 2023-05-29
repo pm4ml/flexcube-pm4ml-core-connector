@@ -1,0 +1,3 @@
+{
+   "refreshToken": cml.exchangeProperty("RefreshToken")
+}

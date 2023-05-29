@@ -17,7 +17,7 @@ public class PostTransferRequestValidator implements Processor {
         if(DataFormatUtils.isJSONValid(body)) {
             JSONObject respObject = new JSONObject(body);
 
-            if (!respObject.has("TransactionID") || !respObject.has("MakerUserID")|| !respObject.has("AccountNumber") || !respObject.has("SettledAmount")|| !respObject.has("SetlledGL")) {
+            if (!respObject.has("transactionID") || !respObject.has("makerUserID")|| !respObject.has("accountNumber") || !respObject.has("settledAmount")|| !respObject.has("settledGL")) {
                 throw new CCCustomException(ErrorCode.getErrorResponse(ErrorCode.MISSING_MANDATORY_ELEMENT, "Required field missing"));
             }
         }

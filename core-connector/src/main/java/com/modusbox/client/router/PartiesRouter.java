@@ -43,7 +43,7 @@ public class PartiesRouter extends RouteBuilder {
             .register();
 
     private final String PATH_NAME = "Flexcube Advance Fetch Due API";
-    private final String PATH = "/loan";
+    private final String PATH = "/loan/getLoanInfo";
 
     private final RouteExceptionHandlingConfigurer exceptionHandlingConfigurer = new RouteExceptionHandlingConfigurer();
 
@@ -98,7 +98,7 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "'Request to GET {{dfsp.host}}" + PATH + ", IN Payload: ${body} IN Headers: ${headers}')")
 
-                .toD("{{dfsp.host}}" + PATH + "?ACCOUNT_NUMBER=${exchangeProperty.loanAccount}")
+                .toD("{{dfsp.host}}" + PATH + "/${exchangeProperty.loanAccount}")
                 .unmarshal().json()
 
                 .to("bean:customJsonMessage?method=logJsonMessage(" +
@@ -126,7 +126,7 @@ public class PartiesRouter extends RouteBuilder {
                         "null, " +
                         "'Output Payload: ${body}')") // default logger
                 .removeHeaders("*", "X-*")
-                .doCatch(CCCustomException.class, HttpException.class,HttpHostConnectException.class,CloseWrittenOffAccountException.class, CamelException.class,CamelExchangeException.class)
+                .doCatch(CCCustomException.class, HttpException.class,HttpHostConnectException.class,CloseWrittenOffAccountException.class, CamelException.class,CamelExchangeException.class, Exception.class)
                   .to("direct:extractCustomErrors")
                 .doFinally()
                 .process(exchange -> {
